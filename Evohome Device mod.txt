@@ -1,13 +1,13 @@
 /**
- *  Copyright 2020 David Lomas (codersaur)
+ *  Copyright 2016 David Lomas (codersaur)
  *
  *  Name: Evohome Heating Zone
  *
  *  Author: David Lomas (codersaur)
  *
- *  Date: 2020
+ *  Date: 2016-04-08
  *
- *  Version: 2.0
+ *  Version: 0.09
  *
  *  Description:
  *   - This device handler is a child device for the Evohome (Connect) SmartApp.
@@ -31,6 +31,7 @@
  * 
  *  To Do:
  *   - Clean up device settings (preferences). Hide/Show prefSetpointDuration input dynamically depending on prefSetpointMode. - If supported for devices???
+ *   - When thermostat mode is away or off, heatingSetpoint overrides should not allowed (although setting while away actually works). Should warn at least.
  *
  *  License:
  *   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -44,27 +45,37 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou") {
+	definition (name: "Evohome Heating Zone", namespace: "codersaur", author: "David Lomas") {
 		capability "Actuator"
 		capability "Sensor"
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability "Thermostat"
-		capability 'Health Check'
-		capability "thermostatOperatingState"
-        
 		
 		//command "poll" // Polling
 		command "refresh" // Refresh
 		command "setHeatingSetpoint" // Thermostat
+		command "raiseSetpoint" // Custom
+		command "lowerSetpoint" // Custom
 		command "setThermostatMode" // Thermostat
+		command "cycleThermostatMode" // Custom
 		command "off" // Thermostat
 		command "heat" // Thermostat
-
+		command "auto" // Custom
+		command "away" // Custom
+		command "economy" // Custom
+		command "dayOff" // Custom
+		command "custom" // Custom
+		command "resume" // Custom
+		command "boost" // Custom
+		command "suppress" // Custom
+		command "generateEvent" // Custom
+		command "test" // Custom
 
 		attribute "temperature","number" // Temperature Measurement
 		attribute "heatingSetpoint","number" // Thermostat
 		attribute "thermostatSetpoint","number" // Thermostat
+		attribute "thermostatSetpointMode", "string" // Custom
 		attribute "thermostatSetpointUntil", "string" // Custom
 		attribute "thermostatSetpointStatus", "string" // Custom
 		attribute "thermostatMode", "string" // Thermostat
@@ -76,6 +87,138 @@ metadata {
 		attribute "optimisation", "string" // Custom
 		attribute "windowFunction", "string" // Custom
 		
+	}
+
+	tiles(scale: 2) {
+
+		// Main multi
+		multiAttributeTile(name:"multi", type:"thermostat", width:6, height:4) {
+			tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
+				attributeState("default", label:'${currentValue}°', unit:"C")
+			}
+			// Up and Down buttons:
+			//tileAttribute("device.temperature", key: "VALUE_CONTROL") {
+			//	attributeState("VALUE_UP", action: "raiseSetpoint")
+			//	attributeState("VALUE_DOWN", action: "lowerSetpoint")
+			//}
+			// Operating State - used to get background colour when type is 'thermostat'.
+			tileAttribute("device.thermostatStatus", key: "OPERATING_STATE") {
+				attributeState("Heating", backgroundColor:"#ffa81e", defaultState: true)
+				attributeState("Idle (Auto)", backgroundColor:"#44b621")
+				attributeState("Idle (Custom)", backgroundColor:"#44b621")
+				attributeState("Idle (Day Off)", backgroundColor:"#44b621")
+				attributeState("Idle (Economy)", backgroundColor:"#44b621")
+				attributeState("Idle (Away)", backgroundColor:"#44b621")
+				attributeState("Off", backgroundColor:"#269bd2")
+			}
+			//tileAttribute("device.thermostatMode", key: "THERMOSTAT_MODE") {
+			//	attributeState("off", label:'${name}')
+			//	attributeState("away", label:'${name}')
+			//	attributeState("auto", label:'${name}')
+			//	attributeState("economy", label:'${name}')
+			//	attributeState("dayOff", label:'${name}')
+			//	attributeState("custom", label:'${name}')
+			//}
+			//tileAttribute("device.heatingSetpoint", key: "HEATING_SETPOINT") {
+			//	attributeState("default", label:'${currentValue}', unit:"C")
+			//}
+			//tileAttribute("device.coolingSetpoint", key: "COOLING_SETPOINT") {
+			//	attributeState("default", label:'${currentValue}', unit:"C")
+			//}
+		}
+	
+		// temperature tile:
+		valueTile("temperature", "device.temperature", width: 2, height: 2, canChangeIcon: true) {
+			state("temperature", label:'${currentValue}°', unit:"C", icon:"st.Weather.weather2",
+					backgroundColors:[
+							// Celsius
+							[value: 0, color: "#153591"],
+							[value: 7, color: "#1e9cbb"],
+							[value: 15, color: "#90d2a7"],
+							[value: 23, color: "#44b621"],
+							[value: 28, color: "#f1d801"],
+							[value: 35, color: "#d04e00"],
+							[value: 37, color: "#bc2323"]
+					]
+			)
+		}
+		
+		// thermostatSetpoint tiles:
+		valueTile("thermostatSetpoint", "device.thermostatSetpoint", width: 3, height: 1) {
+			state "thermostatSetpoint", label:'Setpoint: ${currentValue}°', unit:"C"
+		}
+		valueTile("thermostatSetpointStatus", "device.thermostatSetpointStatus", width: 3, height: 1, decoration: "flat") {
+			state "thermostatSetpointStatus", label:'${currentValue}', backgroundColor:"#ffffff"
+		}
+		standardTile("raiseSetpoint", "device.thermostatSetpoint", width: 1, height: 1, decoration: "flat") {
+			state "setpoint", action:"raiseSetpoint", icon:"st.thermostat.thermostat-up"
+		}
+		standardTile("lowerSetpoint", "device.thermostatSetpoint", width: 1, height: 1, decoration: "flat") {
+			state "setpoint", action:"lowerSetpoint", icon:"st.thermostat.thermostat-down"
+		}
+		standardTile("resume", "device.resume", width: 1, height: 1, decoration: "flat") {
+			state "default", action:"resume", label:'Resume', icon:"st.samsung.da.oven_ic_send"
+		}
+		standardTile("boost", "device.boost", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", action:"boost", label:'Boost' // icon TBC
+		}
+		standardTile("suppress", "device.suppress", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", action:"suppress", label:'Suppress' // icon TBC
+		}
+		
+		
+		// thermostatMode/Status Tiles:
+		
+		// thermostatStatus (also incorporated into the multi tile).
+		valueTile("thermostatStatus", "device.thermostatStatus", height: 1, width: 6, decoration: "flat") {
+			state "thermostatStatus", label:'${currentValue}', backgroundColor:"#ffffff"
+		}
+		// Single thermostatMode tile that cycles between all modes (too slow).
+		// To Do: Update with Evohome-specific modes:
+		standardTile("thermostatMode", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
+			state "off", action:"cycleMode", nextState: "updating", icon: "st.thermostat.heating-cooling-off"
+			state "heat", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.heat"
+			state "cool", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.cool"
+			state "auto", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.auto"
+			state "auxHeatOnly", action:"cycleMode", icon: "st.thermostat.emergency-heat"
+			state "updating", label:"Working", icon: "st.secondary.secondary"
+		}
+		// Individual Mode tiles:
+		standardTile("auto", "device.auto", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"auto", icon: "st.thermostat.auto"
+		}
+		standardTile("away", "device.away", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"away", label:'Away' // icon TBC
+		}
+		standardTile("custom", "device.custom", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"custom", label:'Custom' // icon TBC
+		}
+		standardTile("dayOff", "device.dayOff", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"dayOff", label:'Day Off' // icon TBC
+		}
+		standardTile("economy", "device.economy", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"economy", label:'Economy' // icon TBC
+		}
+		standardTile("off", "device.off", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"off", icon:"st.thermostat.heating-cooling-off"
+		}
+		// Other tiles:
+		standardTile("refresh", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
+			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+		}
+		standardTile("test", "device.test", width: 1, height: 1, decoration: "flat") {
+			state "default", label:'Test', action:"test"
+		}
+		
+		main "temperature"
+		details(
+				[
+				"multi",
+				"thermostatSetpoint","raiseSetpoint","boost","resume",
+				"thermostatSetpointStatus","lowerSetpoint","suppress","refresh",
+				"auto","away","custom","dayOff","economy","off"
+				]
+		)
 	}
 
 	preferences {
@@ -93,6 +236,23 @@ metadata {
 
 }
 
+/**********************************************************************
+ *  Test Commands:
+ **********************************************************************/
+
+
+/**
+ *  test()
+ *
+ *  Test method, called from test tile.
+ **/
+def test() {
+
+	//log.debug "$device.displayName: test(): Properties: ${properties}"
+	//log.debug "$device.displayName: test(): Settings: ${settings}"
+	//log.debug "$device.displayName: test(): State: ${state}"    
+
+}
 
 
 /**********************************************************************
@@ -128,6 +288,8 @@ def installed() {
 	// Populate state.* with default values for each preference/input:
 	state.setpointMode = getInputDefaultValue('prefSetpointMode')
 	state.setpointDuration = getInputDefaultValue('prefSetpointDuration')
+	state.boostTemperature = getInputDefaultValue('prefBoostTemperature')
+	state.suppressTemperature = getInputDefaultValue('prefSuppressTemperature')
 	
 }
 
@@ -144,8 +306,70 @@ def updated() {
 	// Copy input values to state:
 	state.setpointMode = settings.prefSetpointMode
 	state.setpointDuration = settings.prefSetpointDuration
+	state.boostTemperature = formatTemperature(settings.prefBoostTemperature)
+	state.suppressTemperature = formatTemperature(settings.prefSuppressTemperature)
 
 }
+
+
+/**********************************************************************
+ *  SmartApp-Child Interface Commands:
+ **********************************************************************/
+
+/**
+ *  generateEvent(values)
+ *
+ *  Called by parent to update the state of this child device.
+ *
+ **/
+void generateEvent(values) {
+
+	log.info "${device.label}: generateEvent(): New values: ${values}"
+	
+	if(values) {
+		values.each { name, value ->
+			if ( name == 'minHeatingSetpoint' 
+				|| name == 'maxHeatingSetpoint' 
+				|| name == 'temperatureResolution' 
+				|| name == 'windowFunctionTemperature'
+				|| name == 'zoneType'
+				|| name == 'locationId'
+				|| name == 'gatewayId'
+				|| name == 'systemId'
+				|| name == 'zoneId'
+				|| name == 'schedule'
+				|| name == 'debug'
+                || name == 'updateRefreshTime'
+				) {
+				// Internal state only.
+				state."${name}" = value
+			}
+			else { // Attribute value, so generate an event:
+				if (name != null && value != null) {
+					sendEvent(name: name, value: value, displayed: true)
+				}
+				else { // If name or value is null, set displayed to false,
+					   // otherwise the 'Recently' view on smartphone app clogs 
+					   // up with empty events.
+					sendEvent(name: name, value: value, displayed: false)
+				}
+				
+				// Reset targetSetpoint (used by raiseSetpoint/lowerSetpoint) if heatingSetpoint has changed:
+				if (name == 'heatingSetpoint') {
+					state.targetSetpoint = value
+				}
+			}
+		}
+	}
+	
+	// Calculate derived attributes (order is important here):
+	calculateThermostatOperatingState()
+	calculateOptimisations()
+	calculateThermostatStatus()
+	calculateThermostatSetpointStatus()
+	
+}
+
 
 /**********************************************************************
  *  Capability-related Commands:
@@ -177,7 +401,33 @@ void refresh() {
 }
 
 
-
+/**
+ *  setThermostatMode(mode, until=-1)
+ * 
+ *  Set thermostat mode until specified time.
+ *
+ *   mode:    Possible values: 'auto','off','away','dayOff','custom', or 'economy'.
+ *
+ *   until:   (Optional) Time to apply mode until, can be either:
+ *             - Date: Date object representing when override should end.
+ *             - ISO-8601 date string, in format "yyyy-MM-dd'T'HH:mm:ssXX", e.g.: "2016-04-01T00:00:00Z".
+ *             - String: 'permanent'.
+ *             - Number: Duration in hours if mode is 'economy', or days if mode is 'away'/'dayOff'/'custom'.
+ *                       Duration will be rounded down to align with Midnight i nthe local timezone
+ *                       (e.g. a duration of 1 day will end at midnight tonight). If 0, mode is permanent.
+ *                       If duration is not specified, a default value is used from the Evohome SmartApp settings.
+ *
+ *   Notes:   'Auto' and 'Off' modes are always permanent.
+ *            Thermostat mode is a property of the temperatureControlSystem (i.e. Evohome controller).
+ *            Therefore changing the thermostatMode will affect all zones associated with the same controller.
+ * 
+ *  Example usage:
+ *   setThermostatMode('off', 0)         // Set off mode permanently.
+ *   setThermostatMode('away', 1)        // Set away mode for one day (i.e. until midnight tonight).
+ *   setThermostatMode('dayOff', 2)      // Set dayOff mode for two days (ends tomorrow night).
+ *   setThermostatMode('economy', 2)     // Set economy mode for two hours.
+ *
+ **/
 def setThermostatMode(String mode, until=-1) {
 
 	log.info "${device.label}: setThermostatMode(Mode: ${mode}, Until: ${until})"
@@ -362,6 +612,80 @@ def clearHeatingSetpoint() {
 
 
 /**
+ *  raiseSetpoint()
+ * 
+ *  Raise heatingSetpoint and thermostatSetpoint.
+ *  Increments by state.temperatureResolution (usually 0.5).
+ *
+ *  Called by raiseSetpoint tile.
+ * 
+ **/
+void raiseSetpoint() {
+
+	if (state.debug) log.debug "${device.label}: raiseSetpoint()"
+	
+	def mode = device.currentValue("thermostatMode")
+	def targetSp = new BigDecimal(state.targetSetpoint)
+	def tempRes = new BigDecimal(state.temperatureResolution) // (normally 0.5)
+	def maxSp = new BigDecimal(state.maxHeatingSetpoint)
+	
+	if ('off' == mode || 'away' == mode) {
+		log.warn "${device.label}: raiseSetpoint(): thermostat mode (${mode}) does not allow altering the temperature setpoint."
+	}
+	else {
+		targetSp += tempRes
+
+		if (targetSp > maxSp) {
+			targetSp = maxSp
+		}
+		
+		state.targetSetpoint = targetSp
+		log.info "${device.label}: raiseSetpoint(): Target setpoint raised to: ${targetSp}"
+		sendEvent(name: 'thermostatSetpointStatus', value: 'Updating', displayed: false)
+		runIn(3, "alterSetpoint", [overwrite: true]) // Wait three seconds in case targetSetpoint is changed again.
+	}
+	
+}
+
+
+/**
+ *  lowerSetpoint()
+ * 
+ *  Lower heatingSetpoint and thermostatSetpoint.
+ *  Increments by state.temperatureResolution (usually 0.5).
+ *
+ *  Called by lowerSetpoint tile.
+ * 
+ **/
+void lowerSetpoint() {
+
+	if (state.debug) log.debug "${device.label}: lowerSetpoint()"
+	
+	def mode = device.currentValue("thermostatMode")
+	def targetSp = new BigDecimal(state.targetSetpoint)
+	def tempRes = new BigDecimal(state.temperatureResolution) // (normally 0.5)
+	def minSp = new BigDecimal(state.minHeatingSetpoint)
+	
+	if ('off' == mode || 'away' == mode) {
+		log.warn "${device.label}: lowerSetpoint(): thermostat mode (${mode}) does not allow altering the temperature setpoint."
+	}
+	else {
+		targetSp -= tempRes 
+
+		if (targetSp < minSp) {
+			targetSp = minSp
+		}
+		
+		state.targetSetpoint = targetSp
+		log.info "${device.label}: lowerSetpoint(): Target setpoint lowered to: ${targetSp}"
+		sendEvent(name: 'thermostatSetpointStatus', value: 'Updating', displayed: false)
+		runIn(3, "alterSetpoint", [overwrite: true]) // Wait three seconds in case targetSetpoint is changed again.
+	}
+	
+}
+
+
+/**
  *  alterSetpoint()
  * 
  *  Proxy command called by raiseSetpoint and lowerSetpoint, as runIn 
@@ -381,6 +705,15 @@ private alterSetpoint() {
  *   These commands alias other commands with preset parameters.
  **********************************************************************/
 
+void resume() {
+	if (state.debug) log.debug "${device.label}: resume()"
+	clearHeatingSetpoint()
+}
+
+void auto() {
+	if (state.debug) log.debug "${device.label}: auto()"
+	setThermostatMode('auto')
+}
 
 void heat() {
 	if (state.debug) log.debug "${device.label}: heat()"
@@ -392,6 +725,35 @@ void off() {
 	setThermostatMode('off')
 }
 
+void away(until=-1) {
+	if (state.debug) log.debug "${device.label}: away()"
+	setThermostatMode('away', until)
+}
+
+void custom(until=-1) {
+	if (state.debug) log.debug "${device.label}: custom()"
+	setThermostatMode('custom', until)
+}
+
+void dayOff(until=-1) {
+	if (state.debug) log.debug "${device.label}: dayOff()"
+	setThermostatMode('dayOff', until)
+}
+
+void economy(until=-1) {
+	if (state.debug) log.debug "${device.label}: economy()"
+	setThermostatMode('economy', until)
+}
+
+void boost() {
+	if (state.debug) log.debug "${device.label}: boost()"
+	setHeatingSetpoint(state.boostTemperature)
+}
+
+void suppress() {
+	if (state.debug) log.debug "${device.label}: suppress()"
+	setHeatingSetpoint(state.suppressTemperature)
+}
 
 /**********************************************************************
  *  Helper Commands:
@@ -460,6 +822,21 @@ private formatThermostatModeForDisp(mode) {
 	if (state.debug) log.debug "${device.label}: formatThermostatModeForDisp()"
 
 	switch (mode) {
+		case 'auto':
+			mode = 'Auto'
+			break
+		case 'economy':
+			mode = 'Economy'
+			break
+		case 'away':
+			mode = 'Away'
+			break
+		case 'custom':
+			mode = 'Custom'
+			break
+		case 'dayOff':
+			mode = 'Day Off'
+			break
 		case 'off':
 			mode = 'Off'
 			break
@@ -593,6 +970,9 @@ private calculateThermostatSetpointStatus() {
 	
 	if ('off' == device.currentValue('thermostatMode')) {
 		newThermostatSetpointStatus = 'Off'
+	}
+	else if ('away' == device.currentValue('thermostatMode')) {
+		newThermostatSetpointStatus = 'Away'
 	}
 	else if ('active' == device.currentValue('optimisation')) {
 		newThermostatSetpointStatus = 'Optimisation Active'
