@@ -45,7 +45,7 @@
  */ 
 metadata {
 
-	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou", vid: "4f3be3da-cbe0-3b83-a602-6d76d981a4e9", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Zone", namespace: "codersaur", author: "David Lomas", vid: "0db76d14-8fef-303c-a59a-e8a9bb7434d4", mnmn:"SmartThingsCommunity") {
 		// Old capability - capability "Actuator"
 		// Old capability - capability "Sensor"
 		capability "Refresh"
