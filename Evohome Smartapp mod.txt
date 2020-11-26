@@ -511,7 +511,7 @@ private authenticate() {
 		],
 		body: [
 			'grant_type':	'password',
-			'scope':	'EMEA-V1-Basic EMEA-V1-Anonymous EMEA-V1-Get-Current-User-Account EMEA-V1-Get-Location-Installation-Info-By-UserId',
+			'scope':	'EMEA-V1-Basic EMEA-V1-Anonymous EMEA-V1-Get-Current-User-Account',
 			'Username':	settings.prefEvohomeUsername,
 			'Password':	settings.prefEvohomePassword
 		]
@@ -583,7 +583,7 @@ private refreshAuthToken() {
 		],
 		body: [
 			'grant_type':	'refresh_token',
-			'scope':	'EMEA-V1-Basic EMEA-V1-Anonymous EMEA-V1-Get-Current-User-Account EMEA-V1-Get-Location-Installation-Info-By-UserId',
+			'scope':	'EMEA-V1-Basic EMEA-V1-Anonymous EMEA-V1-Get-Current-User-Account',
 			'refresh_token':	atomicState.evohomeAuth.refreshToken
 		]
 	]
