@@ -45,25 +45,25 @@
  */ 
 metadata {
 
-	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou", vid: "67b80687-bc46-30f9-97df-d387940c9aa7", mnmn:"SmartThingsCommunity") {
-		capability "Actuator"
-		capability "Sensor"
+	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou", vid: "42ca616d-4a07-3493-8617-41f7ac612241", mnmn:"SmartThingsCommunity") {
+		// Old capability - capability "Actuator"
+		// Old capability - capability "Sensor"
 		capability "Refresh"
 		capability "Temperature Measurement"
-		capability "Thermostat"
+		// Old capability - capability "Thermostat"
 		capability 'Health Check'
 		capability "thermostatOperatingState"
 		
 		//New Smartthings Capabilities
-		capability "thermostatHeatingSetpoint"
-        capability "thermostatSetpoint"
-		capability "thermostatMode"
+		capability "Thermostat Heating Setpoint"
+        capability "Thermostat Setpoint"
+		capability "Thermostat Mode"
 		
         
 		
 		//command "poll" // Polling
 		command "refresh" // Refresh
-		command "setHeatingSetpoint" // Thermostat
+		command "setHeatingSetpoint"// Thermostat
 		command "setThermostatMode" // Thermostat
 		command "off" // Thermostat
 		command "heat" // Thermostat
@@ -74,7 +74,7 @@ metadata {
 		attribute "thermostatSetpoint","number" // Thermostat
 		attribute "thermostatSetpointUntil", "string" // Custom
 		attribute "thermostatSetpointStatus", "string" // Custom
-		attribute "thermostatMode", "string" // Thermostat
+		attribute "thermostatMode", "enum" // Thermostat
 		attribute "thermostatOperatingState", "string" // Thermostat
 		attribute "thermostatStatus", "string" // Custom
 		attribute "scheduledSetpoint", "number" // Custom
@@ -103,10 +103,10 @@ metadata {
 
 //initialize capabilities' attributes value
 def initialize() {
-	sendEvent(name:"temperature", value:"72", unit:"F")
-	sendEvent(name:"heatingSetpoint", value:"7", unit:"F")
-	sendEvent(name:"thermostatSetpoint", value:"7", unit:"F")
-	sendEvent(name:"thermostatMode", value:"cool")
+	sendEvent(name:"temperature", value:"5", unit:"C")
+	sendEvent(name:"heatingSetpoint", value:"5", unit:"C")
+	sendEvent(name:"thermostatSetpoint", value:"5", unit:"C")
+	sendEvent(name:"thermostatMode", value:"heat")
 }
 
 
