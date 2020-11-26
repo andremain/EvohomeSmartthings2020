@@ -1,13 +1,13 @@
 /**
- *  Copyright 2016 David Lomas (codersaur)
+ *  Copyright 2020 David Lomas (codersaur)
  *
  *  Name: Evohome Heating Zone
  *
  *  Author: David Lomas (codersaur)
  *
- *  Date: 2016-04-08
+ *  Date: 2020
  *
- *  Version: 0.09
+ *  Version: 2.0
  *
  *  Description:
  *   - This device handler is a child device for the Evohome (Connect) SmartApp.
@@ -31,7 +31,6 @@
  * 
  *  To Do:
  *   - Clean up device settings (preferences). Hide/Show prefSetpointDuration input dynamically depending on prefSetpointMode. - If supported for devices???
- *   - When thermostat mode is away or off, heatingSetpoint overrides should not allowed (although setting while away actually works). Should warn at least.
  *
  *  License:
  *   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -45,7 +44,8 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating Zone", namespace: "codersaur", author: "David Lomas") {
+
+	definition (name: "Evohome Heating Zone", namespace: "codersaur", author: "David Lomas", vid: "d3ced07c-402a-3489-857e-251a3b3cb151", mnmn:"SmartThingsCommunity") {
 		capability "Actuator"
 		capability "Sensor"
 		capability "Refresh"
