@@ -45,7 +45,7 @@
  */ 
 metadata {
 
-	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou", vid: "42ca616d-4a07-3493-8617-41f7ac612241", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome 2.0", namespace: "Andremain", author: "Andreas Christodoulou", vid: "4f3be3da-cbe0-3b83-a602-6d76d981a4e9", mnmn:"SmartThingsCommunity") {
 		// Old capability - capability "Actuator"
 		// Old capability - capability "Sensor"
 		capability "Refresh"
