@@ -48,7 +48,7 @@
 definition(
 	name: "Evohome (Connect)",
 	namespace: "codersaur",
-	author: "David Lomas (codersaur)",
+	author: "David Lomas",
 	description: "Connect your Honeywell Evohome System to SmartThings.",
 	category: "My Apps",
 	iconUrl: "http://cdn.device-icons.smartthings.com/Home/home1-icn.png",
@@ -399,7 +399,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating Zone", dni, null, values)
+		                   	d = addChildDevice(app.namespace, "Evohome Heating Test9", dni, null, values) //Chnage the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -1260,7 +1260,7 @@ private formatThermostatMode(mode) {
 			mode = 'auto'
 			break
 		case 'AutoWithEco':
-			mode = 'economy'
+			mode = 'eco'
 			break
 		case 'Away':
 			mode = 'away'
@@ -1270,7 +1270,7 @@ private formatThermostatMode(mode) {
 			break
 		case 'DayOff':
 			mode = 'dayOff'
-			break
+			break	
 		case 'HeatingOff':
 			mode = 'off'
 			break
