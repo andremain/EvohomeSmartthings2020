@@ -65,7 +65,7 @@ preferences {
 		input title: "Advanced Settings:", displayDuringSetup: true, type: "paragraph", element: "paragraph", description: "Change these only if needed"
 		input "prefEvohomeStatusPollInterval", "number", title: "Polling Interval (minutes)", range: "1..60", defaultValue: 5, required: true, displayDuringSetup: true, description: "Poll Evohome every n minutes"
 		input "prefEvohomeUpdateRefreshTime", "number", title: "Update Refresh Time (seconds)", range: "2..60", defaultValue: 3, required: true, displayDuringSetup: true, description: "Wait n seconds after an update before polling"
-		input "prefEvohomeWindowFuncTemp", "decimal", title: "Window Function Temperature", range: "0..100", defaultValue: 5.0, required: true, displayDuringSetup: true, description: "Must match Evohome controller setting"
+		input "prefEvohomeWindowFuncTemp", "decimal", title: "Window Function Temperature", range: "0..100", defaultValue: 5, required: true, displayDuringSetup: true, description: "Must match Evohome controller setting"
 		input title: "Thermostat Modes", description: "Configure how long thermostat modes are applied for by default. Set to zero to apply modes permanently.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
 		input 'prefThermostatModeDuration', 'number', title: 'Away/Custom/DayOff Mode (days):', range: "0..99", defaultValue: 0, required: true, displayDuringSetup: true, description: 'Apply thermostat modes for this many days'
 		input 'prefThermostatEconomyDuration', 'number', title: 'Economy Mode (hours):', range: "0..24", defaultValue: 0, required: true, displayDuringSetup: true, description: 'Apply economy mode for this many hours'
@@ -122,7 +122,7 @@ void updated() {
 	atomicState.debug = settings.prefDebugMode
 	
 	// Evohome:
-	atomicState.evohomeEndpoint = 'https://mytotalconnectcomfort.com'
+	atomicState.evohomeEndpoint = 'https://mytotalconnectcomfort.com/WebApi'
 	atomicState.evohomeAuth = [tokenLifetimePercentThreshold : 50] // Auth Token will be refreshed when down to 50% of its lifetime.
 	atomicState.evohomeStatusPollInterval = settings.prefEvohomeStatusPollInterval // Poll interval for status updates (minutes).
 	atomicState.evohomeSchedulePollInterval = 60 // Hardcoded to 1hr (minutes).
@@ -399,7 +399,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating Test9", dni, null, values) //Chnage the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating Test14", dni, null, values) //Chnage the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -502,7 +502,7 @@ private authenticate() {
 	
 	def requestParams = [
 		method: 'POST',
-		uri: 'https://mytotalconnectcomfort.com',
+		uri: 'https://mytotalconnectcomfort.com/WebApi',
 		path: '/Auth/OAuth/Token',
 		headers: [
 			'Authorization': 'Basic YjAxM2FhMjYtOTcyNC00ZGJkLTg4OTctMDQ4YjlhYWRhMjQ5OnRlc3Q=',
@@ -574,7 +574,7 @@ private refreshAuthToken() {
 
 	def requestParams = [
 		method: 'POST',
-		uri: 'https://mytotalconnectcomfort.com',
+		uri: 'https://mytotalconnectcomfort.com/WebApi',
 		path: '/Auth/OAuth/Token',
 		headers: [
 			'Authorization': 'Basic YjAxM2FhMjYtOTcyNC00ZGJkLTg4OTctMDQ4YjlhYWRhMjQ5OnRlc3Q=',
@@ -1259,20 +1259,20 @@ private formatThermostatMode(mode) {
 		case 'Auto':
 			mode = 'auto'
 			break
+		case 'HeatingOff':
+			mode = 'off'
+			break
 		case 'AutoWithEco':
 			mode = 'eco'
 			break
 		case 'Away':
 			mode = 'away'
 			break
-		case 'Custom':
-			mode = 'custom'
-			break
 		case 'DayOff':
 			mode = 'dayOff'
-			break	
-		case 'HeatingOff':
-			mode = 'off'
+			break
+		case 'Custom':
+			mode = 'custom'
 			break
 		default:
 			log.error "${app.label}: formatThermostatMode(): Mode: ${mode} unknown!"
