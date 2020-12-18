@@ -1,9 +1,9 @@
 /**
- *  Copyright 2020 David Lomas (codersaur)
+ *  Copyright 2020 Andreas Christodoulou (Andremain)
  *
  *  Name: Evohome Heating Zone
  *
- *  Author: David Lomas (codersaur)
+ *  Author: Andreas Christodoulou (Andremain)
  *
  *  Date: 2020
  *
@@ -11,7 +11,7 @@
  *
  *  Description:
  *   - This device handler is a child device for the Evohome (Connect) SmartApp.
- *   - For latest documentation see: https://github.com/codersaur/SmartThings
+ *   - For latest documentation see: https://github.com/andremain/EvohomeSmartthingsNew
  *
  *  Version History:
  *
@@ -44,7 +44,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating Test14", namespace: "codersaur", author: "David Lomas", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "95bbd2df-a1df-3135-934e-bca33f7a6dae", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Test19", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "95bbd2df-a1df-3135-934e-bca33f7a6dae", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
@@ -110,6 +110,8 @@ metadata {
  * 
  **/
 def installed() {
+
+	initialize()
 
 	log.debug "${app.label}: Installed with settings: ${settings}"
 
