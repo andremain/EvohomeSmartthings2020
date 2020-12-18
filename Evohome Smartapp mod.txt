@@ -1,21 +1,49 @@
 /**
- *  Copyright 2016 David Lomas (codersaur)
+ *  Copyright 2020 Andreas Christodoulou (Andremain)
  *
  *  Name: Evohome (Connect)
  *
- *  Author: David Lomas (codersaur)
+ *  Author: Andreas Christodoulou (Andremain)
  *
- *  Date: 2016-04-05
+ *  Date: 18/12/2020
  *
- *  Version: 0.08
+ *  Version: 2.0
  *
  *  Description:
  *   - Connect your Honeywell Evohome System to SmartThings.
  *   - Requires the Evohome Heating Zone device handler.
- *   - For latest documentation see: https://github.com/codersaur/SmartThings
- *
+ *   - For latest documentation see: https://github.com/andremain/EvohomeSmartthingsNew
+ 
  *  Version History:
+ *
+ *	 2020-11-28: v2.0 First release of the new integration. (DO BE DONE!!!)
+ *
+ *	 2020-11-28: v0.21 Changed the links for the documentation and images to work. (DO BE DONE!!!)
+ *
+ *	 2020-11-28: v0.20 Changed the owner of the smartapp and dht to Andremain (mine)
  * 
+ *	 2020-11-28: v0.19 Removed the cooling option when creating an automation in the IF statement (DO BE DONE!!!)
+ *
+ *	 2020-11-28: v0.18 Managed to get all the modes to work with the new app's presentation
+ *
+ *	 2020-11-28: v0.17 Managed to get the Auto, away, custom and off modes to work with the new app's presentation. Some list items appear wierd but this is a Smartthings issue
+ *
+ *	 2020-11-28: v0.16 Managed to get the correct thermostat modes to show app in the modes list in the new app presentation
+ *
+ *	 2020-11-28: v0.15 Changed the default value for window function temperature from 5.0 to 5 as it would throw a bad request error 
+ *
+ *	 2020-11-28: v0.14 Added an initialize function for the new thermostat capabilities
+ *
+ *	 2020-11-28: v0.13 Removed the old custom and depricated capabilited from the old code
+ *
+ *	 2020-11-28: v0.12 Generated the Presentation file required by the new smartthings app for correctly displaying the options for the inside the new app
+ *
+ *	 2020-11-28: v0.11 Fixed the Checking Status on the dashboard tile for use with the new Smartthings app
+ *
+ *	 2020-11-28: v0.10 Added The new capababilities for the depricated thermostat capability used by the new smartthings app
+ *
+ *	 2020-11-02: v0.09 Fixed the API endpoint to be the new one that Honeywell Evohome uses.
+ *	 
  *   2016-04-05: v0.08
  *    - New 'Update Refresh Time' setting to control polling after making an update.
  *    - poll() - If onlyZoneId is 0, this will force a status update for all zones.
@@ -47,13 +75,13 @@
  */
 definition(
 	name: "Evohome (Connect)",
-	namespace: "codersaur",
-	author: "David Lomas",
+	namespace: "Andremain",
+	author: "Andreas Christodoulou",
 	description: "Connect your Honeywell Evohome System to SmartThings.",
 	category: "My Apps",
-	iconUrl: "http://cdn.device-icons.smartthings.com/Home/home1-icn.png",
-	iconX2Url: "http://cdn.device-icons.smartthings.com/Home/home1-icn.png",
-	iconX3Url: "http://cdn.device-icons.smartthings.com/Home/home1-icn.png",
+	iconUrl: "https://i.ibb.co/SwyYJWb/Evohome.png",
+	iconX2Url: "https://i.ibb.co/SwyYJWb/Evohome.png",
+	iconX3Url: "https://i.ibb.co/SwyYJWb/Evohome.png",
 	singleInstance: true
 )
 
@@ -399,7 +427,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating Test14", dni, null, values) //Chnage the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating Test19", dni, null, values) //Chnage the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -973,7 +1001,7 @@ def setThermostatMode(systemId, mode, until=-1) {
 		case 'off':
 			modeIndex = 1
 			break
-		case 'economy':
+		case 'eco':
 			modeIndex = 2
 			break
 		case 'away':
@@ -1269,7 +1297,7 @@ private formatThermostatMode(mode) {
 			mode = 'away'
 			break
 		case 'DayOff':
-			mode = 'dayOff'
+			mode = 'dayoff'
 			break
 		case 'Custom':
 			mode = 'custom'
