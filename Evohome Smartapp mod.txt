@@ -54,14 +54,6 @@
  *   2016-04-03: v0.06
  *    - Initial Beta Release
  * 
- *  To Do:
- *   - Add support for hot water zones (new device handler).
- *   - Tidy up settings: See: http://docs.smartthings.com/en/latest/smartapp-developers-guide/preferences-and-settings.html
- *   - Allow Evohome zones to be (de)selected as part of the setup process.
- *   - Enable notifications if connection to Evohome cloud fails.
- *   - Expose whether thremoStatMode is permanent or temporary, and if temporary for how long. Get from 'tcs.systemModeStatus.*'. i.e thermostatModeUntil
- *   - Investigate if Evohome supports registing a callback so changes in Evohome are pushed to SmartThings instantly (instead of relying on polling).
- *
  *  License:
  *   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *   in compliance with the License. You may obtain a copy of the License at:
