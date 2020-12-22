@@ -7,7 +7,7 @@
  *
  *  Date: 2020
  *
- *  Version: 2.0
+ *  Version: 2.1
  *
  *  Description:
  *   - This device handler is a child device for the Evohome (Connect) SmartApp.
@@ -44,7 +44,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "ee77731c-d3d2-3d1c-bbc1-1c06e902d478", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating R1.1", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
