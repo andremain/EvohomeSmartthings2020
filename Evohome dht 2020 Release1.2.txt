@@ -1,13 +1,13 @@
 /**
- *  Copyright 2020 Andreas Christodoulou (Andremain)
+ *  Copyright 2021 Andreas Christodoulou (Andremain)
  *
  *  Name: Evohome Heating Zone
  *
  *  Author: Andreas Christodoulou (Andremain)
  *
- *  Date: 2020
+ *  Date: 2021
  *
- *  Version: 2.1
+ *  Version: 2.2
  *
  *  Description:
  *   - This device handler is a child device for the Evohome (Connect) SmartApp.
@@ -15,19 +15,8 @@
  *
  *  Version History:
  *
- *   2016-04-08: v0.09
- *    - calculateOptimisations(): Fixed comparison of temperature values.
- * 
- *   2016-04-05: v0.08
- *    - New 'Update Refresh Time' setting from parent to control polling after making an update.
- *    - setThermostatMode(): Forces poll for all zones to ensure new thermostatMode is updated.
- * 
- *   2016-04-04: v0.07
- *    - generateEvent(): hides events if name or value are null.
- *    - generateEvent(): log.info message for new values.
- * 
- *   2016-04-03: v0.06
- *    - Initial Beta Release
+ *   2021-01-19: v2.2
+ *   Changed the default values for Settings: Boost and Suppress to integers, as using decimals cannot change the setpoint duration.
  * 
  *  To Do:
  *   - Clean up device settings (preferences). Hide/Show prefSetpointDuration input dynamically depending on prefSetpointMode. - If supported for devices???
@@ -44,7 +33,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating R1.1", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating R1.2", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
@@ -85,9 +74,9 @@ metadata {
 			input 'prefSetpointMode', 'enum', title: 'Until', description: '', options: ["Next Switchpoint", "Midday", "Midnight", "Duration", "Permanent"], defaultValue: "Next Switchpoint", required: true, displayDuringSetup: true
 			input 'prefSetpointDuration', 'number', title: 'Duration (minutes)', description: 'Apply setpoint for this many minutes', range: "1..1440", defaultValue: 60, required: true, displayDuringSetup: true
 			//input 'prefSetpointTime', 'time', title: 'Time', description: 'Apply setpoint until this time', required: true, displayDuringSetup: true
-			input title: "Setpoint Temperatures", description: "Configure preset temperatures for the 'Boost' and 'Suppress' buttons.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
-			input "prefBoostTemperature", "string", title: "'Boost' Temperature", defaultValue: "21.5", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
-			input "prefSuppressTemperature", "string", title: "'Suppress' Temperature", defaultValue: "15.0", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
+			input title: "Setpoint Temperatures (Decimals Only!)", description: "Configure preset temperatures for the 'Boost' and 'Suppress' buttons.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
+			input "prefBoostTemperature", "string", title: "'Boost' Temperature", defaultValue: "22", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
+			input "prefSuppressTemperature", "string", title: "'Suppress' Temperature", defaultValue: "15", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
 		}
 				
 	}
@@ -127,9 +116,11 @@ def installed() {
 	state.windowFunctionTemperature = formatTemperature(5.0)
 	state.targetSetpoint = state.minHeatingSetpoint
 	
+	
 	// Populate state.* with default values for each preference/input:
 	state.setpointMode = getInputDefaultValue('prefSetpointMode')
 	state.setpointDuration = getInputDefaultValue('prefSetpointDuration')
+	
 	
 }
 
@@ -276,7 +267,7 @@ def setThermostatMode(String mode, until=-1) {
  * 
  *  Set heatingSetpoint until specified time.
  *
- *   setpoint:   Setpoint temperature, e.g.: "21.5". Can be a number or string.
+ *   setpoint:   Setpoint temperature, e.g.: "22". Can be a number or string.
  *               If setpoint is outside allowed range (i.e. minHeatingSetpoint to 
  *               maxHeatingSetpoint) it will be re-written to the appropriate limit.
  *
