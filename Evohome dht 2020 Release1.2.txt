@@ -74,7 +74,7 @@ metadata {
 			input 'prefSetpointMode', 'enum', title: 'Until', description: '', options: ["Next Switchpoint", "Midday", "Midnight", "Duration", "Permanent"], defaultValue: "Next Switchpoint", required: true, displayDuringSetup: true
 			input 'prefSetpointDuration', 'number', title: 'Duration (minutes)', description: 'Apply setpoint for this many minutes', range: "1..1440", defaultValue: 60, required: true, displayDuringSetup: true
 			//input 'prefSetpointTime', 'time', title: 'Time', description: 'Apply setpoint until this time', required: true, displayDuringSetup: true
-			input title: "Setpoint Temperatures (Decimals Only!)", description: "Configure preset temperatures for the 'Boost' and 'Suppress' buttons.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
+			input title: "Setpoint Temperatures (Integers Only!)", description: "Configure preset temperatures for the 'Boost' and 'Suppress' buttons.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
 			input "prefBoostTemperature", "string", title: "'Boost' Temperature", defaultValue: "22", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
 			input "prefSuppressTemperature", "string", title: "'Suppress' Temperature", defaultValue: "15", required: true, displayDuringSetup: true // use of 'decimal' input type in devices is currently broken.
 		}
