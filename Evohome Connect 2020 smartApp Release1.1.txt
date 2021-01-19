@@ -1,13 +1,13 @@
 /**
- *  Copyright 2020 Andreas Christodoulou (Andremain)
+ *  Copyright 2021 Andreas Christodoulou (Andremain)
  *
  *  Name: Evohome (Connect)
  *
  *  Author: Andreas Christodoulou (Andremain)
  *
- *  Date: 18/12/2020
+ *  Date: 19/01/2021
  *
- *  Version: 2.1
+ *  Version: 2.2
  *
  *  Description:
  *   - Connect your Honeywell Evohome System to SmartThings.
@@ -16,7 +16,7 @@
  
  *  Version History:
  *
- *	 2020-12-22: v2.1 Removed Depricated set temperature option at the automation actions
+ *	 2020-12-22: v2.1 Removed Deprecated  set temperature option at the automation actions
  *
  *	 2020-12-22: v2.0 First release of the new integration.
  *
@@ -421,7 +421,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating R1.1", dni, null, values) //Chnage the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating R1.2", dni, null, values) //Chnage the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
