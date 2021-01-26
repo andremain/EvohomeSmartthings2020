@@ -1,0 +1,62 @@
+/**
+ *  Copyright 2021 Andreas Christodoulou (Andremain)
+ *
+ *  Name: Evohome Hot Water Zone
+ *
+ *  Author: Andreas Christodoulou (Andremain)
+ *
+ *  Date: 2021
+ *
+ *  Version: 2.2
+ *
+ *  Description:
+ *   - This device handler is a child device for the Evohome (Connect) SmartApp.
+ *   - For latest documentation see: https://github.com/andremain/EvohomeSmartthingsNew
+ *
+ *  License:
+ *   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *   for the specific language governing permissions and limitations under the License.
+ *
+ */ 
+metadata {
+	definition (name: "Evohome Hot Water", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "e72d00e0-5254-3200-a9cd-a77655df34a4", mnmn:"SmartThingsCommunity") {
+		capability "Refresh"
+		capability "Temperature Measurement"
+		capability 'Health Check'
+		capability "thermostatOperatingState"
+		capability "Switch"
+		
+		command "refresh" // Refresh
+		command "setHeatingSetpoint" // Thermostat
+		command "setThermostatMode" // Thermostat
+		command "on" // Thermostat
+		command "off" // Thermostat
+
+
+		attribute "temperature","number" // Temperature Measurement
+		attribute "thermostatSetpoint","number" // Thermostat
+		attribute "thermostatSetpointUntil", "string" // Custom
+		attribute "thermostatSetpointStatus", "string" // Custom
+		attribute "scheduledSetpoint", "number" // Custom
+		attribute "nextScheduledSetpoint", "number" // Custom
+		attribute "nextScheduledTime", "string" // Custom
+
+	}
+
+	preferences {
+		section { // Setpoint Adjustments:
+			input title: "Setpoint Duration", description: "Configure how long setpoint adjustments are applied for.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
+			input 'prefSetpointMode', 'enum', title: 'Until', description: '', options: ["Next Switchpoint", "Midday", "Midnight", "Duration", "Permanent"], defaultValue: "Next Switchpoint", required: true, displayDuringSetup: true
+			input 'prefSetpointDuration', 'number', title: 'Duration (minutes)', description: 'Apply setpoint for this many minutes', range: "1..1440", defaultValue: 60, required: true, displayDuringSetup: true
+		}
+				
+	}
+
+}
+
