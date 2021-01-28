@@ -5,9 +5,9 @@
  *
  *  Author: Andreas Christodoulou (Andremain)
  *
- *  Date: 19/01/2021
+ *  Date: 28/01/2021
  *
- *  Version: 2.2
+ *  Version: 2.3
  *
  *  Description:
  *   - Connect your Honeywell Evohome System to SmartThings.
@@ -46,6 +46,16 @@
  *
  *	 2020-11-02: v0.09 Fixed the API endpoint to be the new one that Honeywell Evohome uses.
  *	 
+ *   2016-04-19: v0.10
+ *    - formatTemperature() - Improved error handling.
+ *    - Mid-development of DHW zone support.
+ *     - To Do: Add parsing of DHW schedules. - NEED SAMPLE DATA
+ *
+ *   2016-04-17: v0.09
+ *    - updateChildDevice() - Sends two new attribute values to child devices: 
+ *       thermostatModeMode: 'temporary' or 'permanent'.
+ *       thermostatModeUntil: Contains date string if thermostatModeMode is temporary.
+ *
  *   2016-04-05: v0.08
  *    - New 'Update Refresh Time' setting to control polling after making an update.
  *    - poll() - If onlyZoneId is 0, this will force a status update for all zones.
@@ -88,6 +98,7 @@ preferences {
 		input "prefEvohomeStatusPollInterval", "number", title: "Polling Interval (minutes)", range: "1..60", defaultValue: 5, required: true, displayDuringSetup: true, description: "Poll Evohome every n minutes"
 		input "prefEvohomeUpdateRefreshTime", "number", title: "Update Refresh Time (seconds)", range: "2..60", defaultValue: 3, required: true, displayDuringSetup: true, description: "Wait n seconds after an update before polling"
 		input "prefEvohomeWindowFuncTemp", "decimal", title: "Window Function Temperature", range: "0..100", defaultValue: 5, required: true, displayDuringSetup: true, description: "Must match Evohome controller setting"
+		input "prefEvohomeDHWTemp", "decimal", title: "Hot Water Target Temperature", range: "0..100", defaultValue: 55, required: true, displayDuringSetup: true, description: "Must match Evohome controller setting"
 		input title: "Thermostat Modes", description: "Configure how long thermostat modes are applied for by default. Set to zero to apply modes permanently.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
 		input 'prefThermostatModeDuration', 'number', title: 'Away/Custom/DayOff Mode (days):', range: "0..99", defaultValue: 0, required: true, displayDuringSetup: true, description: 'Apply thermostat modes for this many days'
 		input 'prefThermostatEconomyDuration', 'number', title: 'Economy Mode (hours):', range: "0..24", defaultValue: 0, required: true, displayDuringSetup: true, description: 'Apply economy mode for this many hours'
@@ -98,6 +109,20 @@ preferences {
 	}
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /**********************************************************************
  *  Setup and Configuration Commands:
@@ -370,7 +395,9 @@ void handleAppTouch(evt) {
 	//getEvohomeConfig()
 	//updateChildDeviceConfig()
 	
-	poll()
+    getEvohomeSchedules()
+	
+	//poll()
 
 }
 
@@ -382,8 +409,7 @@ void handleAppTouch(evt) {
 /**
  *  updateChildDeviceConfig()
  * 
- *  Add/Remove/Update Child Devices based on atomicState.evohomeConfig
- *  and update their internal state.
+ *  Add/Remove/Update child devices based on atomicState.evohomeConfig.
  *
  **/
 void updateChildDeviceConfig() {
@@ -393,10 +419,11 @@ void updateChildDeviceConfig() {
 	// Build list of active DNIs, any existing children with DNIs not in here will be deleted.
 	def activeDnis = []
 	
-	// Iterate through evohomeConfig, adding new Evohome Heating Zone devices where necessary.
+	// Iterate through evohomeConfig, adding new 'Evohome Heating R1.3' and 'Evohome Hot Water Zone' devices where necessary.
 	atomicState.evohomeConfig.each { loc ->
 		loc.gateways.each { gateway ->
 			gateway.temperatureControlSystems.each { tcs ->
+                // Heating Zones:
 				tcs.zones.each { zone ->
 					
 					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, zone.zoneId )
@@ -421,7 +448,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating R1.2", dni, null, values) //Chnage the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating R1.3", dni, null, values) //Change the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -431,6 +458,42 @@ void updateChildDeviceConfig() {
 						d.generateEvent(values)
 					}
 				}
+
+
+                // Hot Water Zone:
+                if (tcs.dhw) {
+                
+                	def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, tcs.dhw.dhwId )
+					activeDnis << dni
+					
+					def values = [
+						'debug': atomicState.debug,
+						'updateRefreshTime': atomicState.evohomeUpdateRefreshTime,
+                        'dhwTemperature': formatTemperature(settings.prefEvohomeDHWTemp),
+						'zoneType': 'DHW',
+						'locationId': loc.locationInfo.locationId,
+						'gatewayId': gateway.gatewayInfo.gatewayId,
+						'systemId': tcs.systemId,
+						'zoneId': tcs.dhw.dhwId
+					]
+					
+					log.info "${app.label}: updateChildDeviceConfig(): Found a hot water zone! Values: ${values}"
+                
+                	def d = getChildDevice(dni)
+					if(!d) {
+						try {
+							values.put('label', "Hot Water (Evohome)")
+							log.info "${app.label}: updateChildDeviceConfig(): Creating Hot Water Zone: DNI: ${dni}"
+		                   	d = addChildDevice(app.namespace, "Evohome Hot Water Zone", dni, null, values)
+						} catch (e) {
+							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
+						}
+					} 
+					
+					if(d) {
+                    	d.generateEvent(values)
+					}
+                }
 			}
 		}
 	}
@@ -473,6 +536,7 @@ void updateChildDevice(onlyZoneId=-1) {
 	atomicState.evohomeStatus.each { loc ->
 		loc.gateways.each { gateway ->
 			gateway.temperatureControlSystems.each { tcs ->
+            	// Heating Zones:
 				tcs.zones.each { zone ->
 					if (onlyZoneId == -1 || onlyZoneId == zone.zoneId) { // Filter on zoneId if one has been specified.
 					
@@ -488,9 +552,11 @@ void updateChildDevice(onlyZoneId=-1) {
 								//'isTemperatureAvailable': zone?.temperatureStatus?.isAvailable,
 								'heatingSetpoint': formatTemperature(zone?.heatSetpointStatus?.targetTemperature),
 								'thermostatSetpoint': formatTemperature(zone?.heatSetpointStatus?.targetTemperature),
-								'thermostatSetpointMode': formatSetpointMode(zone?.heatSetpointStatus?.setpointMode),
+								'thermostatSetpointMode': decapitalise(zone?.heatSetpointStatus?.setpointMode),
 								'thermostatSetpointUntil': zone?.heatSetpointStatus?.until,
 								'thermostatMode': formatThermostatMode(tcs?.systemModeStatus?.mode),
+								'thermostatModeMode': (tcs?.systemModeStatus?.isPermanent) ? 'permanent' : 'temporary',
+								'thermostatModeUntil': tcs?.systemModeStatus?.timeUntil,
 								'scheduledSetpoint': formatTemperature(currSw.temperature),
 								'nextScheduledSetpoint': formatTemperature(nextSw.temperature),
 								'nextScheduledTime': nextSw.time
@@ -498,10 +564,40 @@ void updateChildDevice(onlyZoneId=-1) {
 							if (atomicState.debug) log.debug "${app.label}: updateChildDevice(): Updating Device with DNI: ${dni} with data: ${values}"
 							d.generateEvent(values)
 						} else {
-							if (atomicState.debug) log.debug "${app.label}: updateChildDevice(): Device with DNI: ${dni} does not exist, so skipping status update."
+							if (atomicState.debug) log.debug "${app.label}: updateChildDevice(): Device with DNI: ${dni} does not exist."
 						}
 					}
 				}
+                
+                // Hot Water Zone: 
+                if (tcs.dhw && (onlyZoneId == -1 || onlyZoneId == tcs.dhw.dhwId)) { // Filter on zoneId if one has been specified.
+                
+                    def dni = generateDni(loc.locationId, gateway.gatewayId, tcs.systemId, tcs.dhw.dhwId)
+                    def d = getChildDevice(dni)
+                    if(d) {
+                        //def schedule = atomicState.evohomeSchedules.find { it.dni == dni}
+                        //def currSw = getCurrentSwitchpoint(schedule.schedule)
+                        //def nextSw = getNextSwitchpoint(schedule.schedule)
+
+                        def values = [
+                            'temperature': formatTemperature(tcs.dhw?.temperatureStatus?.temperature),
+                            //'isTemperatureAvailable': tcs.dhw?.temperatureStatus?.isAvailable,
+                            'switch': tcs.dhw?.stateStatus?.state.toLowerCase(),
+                            'switchStateMode': decapitalise(tcs.dhw?.stateStatus?.mode), 
+                            'switchStateUntil': tcs.dhw?.stateStatus?.until,
+                            'thermostatMode': formatThermostatMode(tcs?.systemModeStatus?.mode),
+							'thermostatModeMode': (tcs?.systemModeStatus?.isPermanent) ? 'permanent' : 'temporary',
+							'thermostatModeUntil': tcs?.systemModeStatus?.timeUntil
+							// 'scheduledSwitchState': ??
+                            // 'nextScheduledSwitchState': ??
+                            // 'nextScheduledTime': ??
+                        ]
+                        if (atomicState.debug) log.debug "${app.label}: updateChildDevice(): Updating Device with DNI: ${dni} with data: ${values}"
+                        d.generateEvent(values)
+                    } else {
+                        if (atomicState.debug) log.debug "${app.label}: updateChildDevice(): Device with DNI: ${dni} does not exist."
+                    }
+                }
 			}
 		}
 	}
@@ -737,11 +833,17 @@ private getEvohomeConfig() {
 }
 
 
+
+
+
+
 /**
  *  getEvohomeStatus(onlyZoneId=-1)
  * 
  *  Gets Evohome Status for specified zone and stores in atomicState.evohomeStatus.
- *  If onlyZoneId is not specified, all zones are updated.
+ *  If onlyZoneId is not specified, all zones in all locations are updated.
+ *
+ *  Calls getEvohomeLocationStatus() and getEvohomeZoneStatus().
  *
  **/
 private getEvohomeStatus(onlyZoneId=-1) {
@@ -776,13 +878,13 @@ private getEvohomeStatus(onlyZoneId=-1) {
 			// Get existing evohomeStatus and update only the specified zone, preserving data for other zones:
 			// Have to do this as atomicState.evohomeStatus can only be written in its entirety (as using atomicstate).
 			// If mutiple zones are requesting updates at the same time this could cause loss of new data, but
-			// the worse case is having out-of-date data for a few minutes...
+			// the worst case is having out-of-date data for a few minutes...
 			newEvohomeStatus = atomicState.evohomeStatus
 			newEvohomeStatus.each { loc ->
 				loc.gateways.each { gateway ->
 					gateway.temperatureControlSystems.each { tcs ->
 						tcs.zones.each { zone ->
-							if (onlyZoneId == zone.zoneId) { // This is the zone that must be updated:
+							if (onlyZoneId == zone.zoneId) {
 								zone.activeFaults = newZoneStatus.activeFaults
 								zone.heatSetpointStatus = newZoneStatus.heatSetpointStatus
 								zone.temperatureStatus = newZoneStatus.temperatureStatus
@@ -880,7 +982,11 @@ private getEvohomeZoneStatus(zoneId) {
 /**
  *  getEvohomeSchedules()
  * 
+ *  Gets the schedules for all hot water and temperature (heating) zones
  *  Gets Evohome Schedule for each zone and stores in atomicState.evohomeSchedules.
+ *  and stores in atomicState.evohomeSchedules.
+ *
+ *  Calls getEvohomeTempZoneSchedule() and getEvohomeDHWSchedule().
  *
  **/
 private getEvohomeSchedules() {
@@ -892,11 +998,20 @@ private getEvohomeSchedules() {
 	atomicState.evohomeConfig.each { loc ->
 		loc.gateways.each { gateway ->
 			gateway.temperatureControlSystems.each { tcs ->
+				// Heating Zones:
 				tcs.zones.each { zone ->
 					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, zone.zoneId )
-					def schedule = getEvohomeZoneSchedule(zone.zoneId)
+					def schedule = getEvohomeTempZoneSchedule(zone.zoneId)
 					if (schedule) {
 						evohomeSchedules << ['zoneId': zone.zoneId, 'dni': dni, 'schedule': schedule]
+					}
+				}
+				// Hot Water Zone:
+				if (tcs.dhw.dhwId) {
+					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, tcs.dhw.dhwId )
+					def schedule = getEvohomeDHWSchedule(tcs.dhw.dhwId)
+					if (schedule) {
+						evohomeSchedules << ['zoneId': tcs.dhw.dhwId, 'dni': dni, 'schedule': schedule]
 					}
 				}
 			}
@@ -914,13 +1029,13 @@ private getEvohomeSchedules() {
 
 
 /**
- *  getEvohomeZoneSchedule(zoneId)
+ *  getEvohomeTempZoneSchedule(zoneId)
  * 
- *  Gets the schedule for a specific zone and returns data as a map.
+ *  Gets the schedule for the specified temperature (heating) zone and returns data as a map.
  *
  **/
-private getEvohomeZoneSchedule(zoneId) {
-	if (atomicState.debug) log.debug "${app.label}: getEvohomeZoneSchedule(${zoneId})"
+private getEvohomeTempZoneSchedule(zoneId) {
+	if (atomicState.debug) log.debug "${app.label}: getEvohomeTempZoneSchedule(${zoneId})"
 	
 	def requestParams = [
 		'method': 'GET',
@@ -932,16 +1047,53 @@ private getEvohomeZoneSchedule(zoneId) {
 	try {
 		httpGet(requestParams) { resp ->
 			if(resp.status == 200 && resp.data) {
-				if (atomicState.debug) log.debug "${app.label}: getEvohomeZoneSchedule: Data: ${resp.data}"
+				if (atomicState.debug) log.debug "${app.label}: getEvohomeTempZoneSchedule: Data: ${resp.data}"
 				return resp.data
 			}
 			else {
-				log.error "${app.label}: getEvohomeZoneSchedule:  No Data. Response Status: ${resp.status}"
+				log.error "${app.label}: getEvohomeTempZoneSchedule:  No Data. Response Status: ${resp.status}"
 				return false
 			}
 		}
 	} catch (groovyx.net.http.HttpResponseException e) {
-		log.error "${app.label}: getEvohomeZoneSchedule: Error: e.statusCode ${e.statusCode}"
+		log.error "${app.label}: getEvohomeTempZoneSchedule: Error: e.statusCode ${e.statusCode}"
+		if (e.statusCode == 401) {
+			atomicState.evohomeAuthFailed = true
+		}
+		return false
+	}
+}
+
+
+/**
+ *  getEvohomeDHWSchedule(zoneId)
+ * 
+ *  Gets the schedule for the specified hot water zone and returns data as a map.
+ *
+ **/
+private getEvohomeDHWSchedule(zoneId) {
+	if (atomicState.debug) log.debug "${app.label}: getEvohomeDHWSchedule(${zoneId})"
+	
+	def requestParams = [
+		'method': 'GET',
+		'uri': atomicState.evohomeEndpoint,
+		'path': "/WebAPI/emea/api/v1/domesticHotWater/${zoneId}/schedule",
+		'headers': atomicState.evohomeHeaders
+	]
+
+	try {
+		httpGet(requestParams) { resp ->
+			if(resp.status == 200 && resp.data) {
+				if (atomicState.debug) log.debug "${app.label}: getEvohomeDHWSchedule: Data: ${resp.data}"
+				return resp.data
+			}
+			else {
+				log.error "${app.label}: getEvohomeDHWSchedule:  No Data. Response Status: ${resp.status}"
+				return false
+			}
+		}
+	} catch (groovyx.net.http.HttpResponseException e) {
+		log.error "${app.label}: getEvohomeDHWSchedule: Error: e.statusCode ${e.statusCode}"
 		if (e.statusCode == 401) {
 			atomicState.evohomeAuthFailed = true
 		}
@@ -1093,7 +1245,7 @@ def setThermostatMode(systemId, mode, until=-1) {
  /**
  *  setHeatingSetpoint(zoneId, setpoint, until=-1)
  * 
- *  Set heatingSetpoint for specified zoneId, until specified time.
+ *  Set heatingSetpoint override for specified heating zone, until specified time.
  *
  *   zoneId:     Zone ID of zone, e.g.: "123456"
  *
@@ -1177,8 +1329,9 @@ def setHeatingSetpoint(zoneId, setpoint, until=-1) {
 /**
  *  clearHeatingSetpoint(zoneId)
  * 
- *  Clear the heatingSetpoint for specified zoneId.
+ *  Clear any override for the specified heating zone.
  *   zoneId:     Zone ID of zone, e.g.: "123456"
+ *
  **/
 def clearHeatingSetpoint(zoneId) {
 
@@ -1214,15 +1367,155 @@ def clearHeatingSetpoint(zoneId) {
 }
 
 
+/**
+ *  setDHWSwitchState(zoneId, switchState, until=-1)
+ * 
+ *  Set state override for specified hot water zone, until specified time.
+ *
+ *   zoneId:       Zone ID of hot water zone, e.g.: "123456"
+ *
+ *   switchState:  'on' or 'off'.
+ *
+ *   until:       (Optional) Time to apply setpoint until, can be either:
+ *                 - Date: date object representing when override should end.
+ *                 - ISO-8601 date string, in format "yyyy-MM-dd'T'HH:mm:ssXX", e.g.: "2016-04-01T00:00:00Z".
+ *                 - String: 'permanent'.
+ *                If not specified, setpoint will be applied permanently.
+ *
+ *  Example usage:
+ *   setDHWSwitchState(123456, 'on') // Turn on hot water zone (123456) permanently.
+ *   setDHWSwitchState(123456, 'off', 'permanent') // Turn off hot water zone (123456) permanently.
+ *   setDHWSwitchState(123456, 'on', '2016-04-01T00:00:00Z') // Turn on hot water zone (123456) until specific time.
+ *
+ **/
+def setDHWSwitchState(zoneId, switchState, until=-1) {
+
+	if (atomicState.debug) log.debug "${app.label}: setDHWSwitchState(): Hot Water Zone ID: ${zoneId}, switchState: ${switchState}, Until: ${until}"
+	
+	// Clean switchState:
+	def stateRes = ('on' == switchState.toLowerCase()) ? 1 : 0
+	
+	// Clean until:
+	def untilRes
+	if ('permanent' == until || 0 == until || -1 == until) {
+		untilRes = 0
+	}
+	else if (until instanceof Date) {
+		untilRes = until.format("yyyy-MM-dd'T'HH:mm:00XX", TimeZone.getTimeZone('UTC')) // Round to nearest minute.
+	}
+	else if (until ==~ /\d+.*T.*/) { // until is a ISO-8601 date string already, but we'll re-format it anyway to ensure it's in UTC:
+		untilRes = new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", until).format("yyyy-MM-dd'T'HH:mm:00XX", TimeZone.getTimeZone('UTC')) // Round to nearest minute.
+	}
+	else {
+		log.warn "${device.label}: setDHWSwitchState(): until value could not be parsed. Setpoint will be applied permanently."
+		untilRes = 0
+	}
+	
+	// Build request:
+	// Note, DHW uses the parameter 'UntilTime' whereas heating zones use 'TimeUntil'. Go figure!
+	def body
+	if (0 == untilRes) { // Permanent:
+		body = ['State': stateRes, 'Mode': 1, 'UntilTime': null]
+		log.info "${app.label}: setDHWSwitchState(): Hot Water Zone ID: ${zoneId}, State: ${switchState}, Until: Permanent"
+	}
+	else { // Temporary:
+		body = ['State': stateRes, 'Mode': 2, 'UntilTime': untilRes]
+		log.info "${app.label}: setDHWSwitchState(): Hot Water Zone ID: ${zoneId}, State: ${switchState}, Until: ${untilRes}"
+	}
+	
+	def requestParams = [
+		'uri': atomicState.evohomeEndpoint,
+		'path': "/WebAPI/emea/api/v1/domesticHotWater/${zoneId}/state", 
+		'body': body,
+		'headers': atomicState.evohomeHeaders
+	]
+	
+	// Make request:
+	try {
+		httpPutJson(requestParams) { resp ->
+			if(resp.status == 201 && resp.data) {
+				if (atomicState.debug) log.debug "${app.label}: setDHWSwitchState(): Response: ${resp.data}"
+				return null
+			}
+			else {
+				log.error "${app.label}: setDHWSwitchState():  No Data. Response Status: ${resp.status}"
+				return 'error'
+			}
+		}
+	} catch (groovyx.net.http.HttpResponseException e) {
+		log.error "${app.label}: setDHWSwitchState(): Error: ${e}"
+		if (e.statusCode == 401) {
+			atomicState.evohomeAuthFailed = true
+		}
+		return e
+	}
+}
+
+
+/**
+ *  clearDHWSwitchState(zoneId)
+ * 
+ *  Clear any override for the specific hot water zone.
+ *   zoneId:     Zone ID of hot water zone, e.g.: "123456"
+ *
+ **/
+def clearDHWSwitchState(zoneId) {
+
+	log.info "${app.label}: clearDHWSwitchState(): Hot Water Zone ID: ${zoneId}"
+	
+	// Build request:
+	def requestParams = [
+		'uri': atomicState.evohomeEndpoint,
+		'path': "/WebAPI/emea/api/v1/domesticHotWater/${zoneId}/state", 
+		'body': ['State': 0, 'Mode': 0, 'UntilTime': null],
+		'headers': atomicState.evohomeHeaders
+	]
+	
+	// Make request:
+	try {
+		httpPutJson(requestParams) { resp ->
+			if(resp.status == 201 && resp.data) {
+				if (atomicState.debug) log.debug "${app.label}: clearDHWSwitchState(): Response: ${resp.data}"
+				return null
+			}
+			else {
+				log.error "${app.label}: clearDHWSwitchState():  No Data. Response Status: ${resp.status}"
+				return 'error'
+			}
+		}
+	} catch (groovyx.net.http.HttpResponseException e) {
+		log.error "${app.label}: clearDHWSwitchState(): Error: ${e}"
+		if (e.statusCode == 401) {
+			atomicState.evohomeAuthFailed = true
+		}
+		return e
+	}
+}
+
 /**********************************************************************
  *  Helper Commands:
  **********************************************************************/
  
  /**
+ *  pseudoSleep(ms)
+ * 
+ *  Substitute for sleep() command.
+ *
+ **/
+private pseudoSleep(ms) {
+	def start = now()
+	while (now() < start + ms) {
+		// Do nothing, just wait.
+	}
+}
+
+
+/**
  *  generateDni(locId,gatewayId,systemId,deviceId)
  * 
  *  Generate a device Network ID.
  *  Uses the same format as the official Evohome App, but with a prefix of "Evohome."
+ *
  **/
 private generateDni(locId,gatewayId,systemId,deviceId) {
 	return 'Evohome.' + [ locId, gatewayId, systemId, deviceId ].join('.')
@@ -1234,38 +1527,38 @@ private generateDni(locId,gatewayId,systemId,deviceId) {
  * 
  *  Format temperature value to one decimal place.
  *  t:   can be string, float, bigdecimal...
- *  Returns as string.
+ *  Returns string.
+ *
  **/
 private formatTemperature(t) {
-	return Float.parseFloat("${t}").round(1).toString()
+	try {
+		return Float.parseFloat("${t}").round(1).toString()
+    }
+    catch (NumberFormatException e) {
+    	log.warn "${app.label}: formatTemperature(): could not parse value: ${t}"
+        return null
+    }
 }
  
  
- /**
- *  formatSetpointMode(mode)
+/**
+ *  decapitalise(string)
+ *
  * 
- *  Format Evohome setpointMode values to SmartThings values:
+ *  Decapitalise first letter of string.
+ *
  *   
  **/
-private formatSetpointMode(mode) {
- 
-	switch (mode) {
-		case 'FollowSchedule':
-			mode = 'followSchedule'
-			break
-		case 'PermanentOverride':
-			mode = 'permanentOverride'
-			break
-		case 'TemporaryOverride':
-			mode = 'temporaryOverride'
-			break
-		default:
-			log.error "${app.label}: formatSetpointMode(): Mode: ${mode} unknown!"
-			mode = mode.toLowerCase()
-			break
+private decapitalise(string) {
+
+    if ( string == null || 0 == string.length() ) {
+        return string
+    }
+    else {
+    	return string[0].toLowerCase() + string.substring(1)
+
 	}
 
-	return mode
 }
  
  
@@ -1297,7 +1590,7 @@ private formatThermostatMode(mode) {
 			mode = 'custom'
 			break
 		default:
-			log.error "${app.label}: formatThermostatMode(): Mode: ${mode} unknown!"
+			log.warn "${app.label}: formatThermostatMode(): Mode: ${mode} unknown!"
 			mode = mode.toLowerCase()
 			break
 	}
