@@ -1,0 +1,797 @@
+/**
+ *  Copyright 2021 Andreas Christodoulou (Andremain)
+ *
+ *  Name: Evohome Hot Water Zone
+ *
+ *  Author: Andreas Christodoulou (Andremain)
+ *
+ *  Date: 2021
+ *
+ *  Version: 2.3
+ *
+ *  Description:
+ *   - This device handler is a child device for the Evohome (Connect) SmartApp.
+ *   - For latest documentation see: https://github.com/codersaur/SmartThings
+ *
+ *  Version History:
+ * 
+ *   2016-04-18: v0.01
+ *    - Initial Release
+ * 
+ *  To Do:
+ *   Clean up tiles.
+ *
+ *  License:
+ *   Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License. You may obtain a copy of the License at:
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+ *   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
+ *   for the specific language governing permissions and limitations under the License.
+ *
+ */ 
+metadata {
+	definition (name: "Evohome Hot Water Zone", namespace: "Andremain", author: "Andreas Christodoulou") {
+		capability "Actuator"
+		capability "Sensor"
+		capability "Refresh"
+		capability "Switch"
+		capability "Temperature Measurement"
+		capability "Thermostat"
+		
+		//command "poll" // Polling
+		command "refresh" // Refresh
+		command "setThermostatMode" // Thermostat
+		command "setSwitchState" // Custom
+		command "on" // Switch
+		command "off" // Switch
+		command "heat" // Thermostat
+		command "auto" // Custom
+		command "away" // Custom
+		command "economy" // Custom
+		command "dayOff" // Custom
+		command "custom" // Custom
+		command "resume" // Custom
+		command "boost" // Custom
+		command "suppress" // Custom
+		command "generateEvent" // Custom
+		command "test" // Custom
+
+		attribute "temperature","number" // Temperature Measurement
+		attribute "thermostatMode", "string" // Thermostat
+		attribute "thermostatModeMode", "string" // Custom
+		attribute "thermostatModeUntil", "string" // Custom
+		attribute "thermostatOperatingState", "string" // Thermostat
+		attribute "thermostatStatus", "string" // Custom
+		attribute "switch", "string" // Switch
+		attribute "switchStateMode", "string" // Custom
+		attribute "switchStateUntil", "string" // Custom
+		attribute "switchStatus", "string" // Custom
+		attribute "scheduledSwitchState", "number" // Custom
+		attribute "nextScheduledSwitchState", "number" // Custom
+		attribute "nextScheduledTime", "string" // Custom
+		
+	}
+
+	tiles(scale: 2) {
+
+		// Main multi
+		multiAttributeTile(name:"multi", type:"generic", width:6, height:4, canChangeIcon: true) {
+			tileAttribute("device.switch", key: "PRIMARY_CONTROL") {
+				attributeState("off", label: 'Off', backgroundColor:"#269bd2") // icon: 'st.thermostat.heating-cooling-off'
+				attributeState("on", label: 'On', backgroundColor:"#ffa81e") // icon: 'st.thermostat.heating'
+			}
+			
+			tileAttribute("device.thermostatStatus", key: "SECONDARY_CONTROL") {
+				attributeState "default", label:'(${currentValue})'
+			}
+			
+		}
+	
+		// temperature tile:
+		valueTile("temperature", "device.temperature", width: 2, height: 2, canChangeIcon: true) {
+			state("temperature", label:'${currentValue}°', unit:"C", icon:"st.Weather.weather2",
+					backgroundColors:[
+							// Celsius
+							[value: 0, color: "#153591"],
+							[value: 10, color: "#1e9cbb"],
+							[value: 20, color: "#90d2a7"],
+							[value: 30, color: "#44b621"],
+							[value: 40, color: "#f1d801"],
+							[value: 50, color: "#d04e00"],
+							[value: 60, color: "#bc2323"]
+					]
+			)
+		}
+		
+		// switch state tiles:
+		valueTile("switchStatus", "device.switchStatus", width: 3, height: 1, decoration: "flat") {
+			state "switchStatus", label:'${currentValue}', backgroundColor:"#ffffff"
+		}
+		standardTile("resume", "device.resume", width: 1, height: 1, decoration: "flat") {
+			state "default", action:"resume", label:'Resume', icon:"st.samsung.da.oven_ic_send"
+		}
+		standardTile("boost", "device.boost", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", action:"boost", label:'Boost' // icon TBC
+		}
+		standardTile("suppress", "device.suppress", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+			state "default", action:"suppress", label:'Suppress' // icon TBC
+		}
+		
+		
+		// thermostatMode/Status Tiles:
+		
+		// thermostatStatus (also incorporated into the multi tile).
+		valueTile("thermostatStatus", "device.thermostatStatus", height: 1, width: 6, decoration: "flat") {
+			state "thermostatStatus", label:'${currentValue}', backgroundColor:"#ffffff"
+		}
+		// Single thermostatMode tile that cycles between all modes (too slow).
+		// To Do: Update with Evohome-specific modes:
+		standardTile("thermostatMode", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
+			state "off", action:"cycleMode", nextState: "updating", icon: "st.thermostat.heating-cooling-off"
+			state "heat", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.heat"
+			state "cool", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.cool"
+			state "auto", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.auto"
+			state "auxHeatOnly", action:"cycleMode", icon: "st.thermostat.emergency-heat"
+			state "updating", label:"Working", icon: "st.secondary.secondary"
+		}
+		// Individual Mode tiles:
+		standardTile("auto", "device.auto", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"auto", icon: "st.thermostat.auto"
+		}
+		standardTile("away", "device.away", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"away", label:'Away' // icon TBC
+		}
+		standardTile("custom", "device.custom", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"custom", label:'Custom' // icon TBC
+		}
+		standardTile("dayOff", "device.dayOff", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"dayOff", label:'Day Off' // icon TBC
+		}
+		standardTile("economy", "device.economy", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"economy", label:'Economy' // icon TBC
+		}
+		standardTile("off", "device.off", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
+			state "default", action:"off", icon:"st.thermostat.heating-cooling-off"
+		}
+		// Other tiles:
+		standardTile("refresh", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
+			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
+		}
+		standardTile("test", "device.test", width: 1, height: 1, decoration: "flat") {
+			state "default", label:'Test', action:"test"
+		}
+		
+		main "multi"
+		details(
+				[
+				"multi",
+				"temperature","boost","switchStatus",
+				"suppress","resume","refresh", "test",
+				"auto","away","custom","dayOff","economy","off"
+				]
+		)
+	}
+
+	preferences {
+		section { // Override Settings:
+			input title: "Override Defaults", description: "Configure how long overrides are applied for.", displayDuringSetup: true, type: "paragraph", element: "paragraph"
+			input 'prefOverrideUntil', 'enum', title: 'Until', description: '', options: ["Next Switchpoint", "Midday", "Midnight", "Duration", "Permanent"], defaultValue: "Next Switchpoint", required: true, displayDuringSetup: true
+			input 'prefOverrideDuration', 'number', title: 'Duration (minutes)', description: 'Apply override for this many minutes', range: "1..1440", defaultValue: 60, required: true, displayDuringSetup: true
+		}
+	
+	}
+
+}
+
+/**********************************************************************
+ *  Test Commands:
+ **********************************************************************/
+
+
+/**
+ *  test()
+ *
+ *  Test method, called from test tile.
+ **/
+def test() {
+
+	//log.debug "$device.displayName: test(): Properties: ${properties}"
+	log.debug "$device.displayName: test(): Settings: ${settings}"
+	log.debug "$device.displayName: test(): State: ${state}"    
+
+}
+
+
+/**********************************************************************
+ *  Setup and Configuration Commands:
+ **********************************************************************/
+
+/**
+ *  installed()
+ *
+ *  Runs when the device is first installed.
+ *  
+ *  When a device is created by a SmartApp, settings are not populated
+ *  with the defaultValues configured for each input. Therefore, we
+ *  populate the corresponding state.* variables with the input defaultValues.
+ * 
+ **/
+def installed() {
+
+	log.debug "${app.label}: Installed with settings: ${settings}"
+
+	state.installedAt = now()
+	
+	// These default values will be overwritten by the Evohome SmartApp almost immediately:
+	state.debug = false
+    state.updateRefreshTime = 5 // Wait this many seconds after an update before polling.
+	state.dhwTemperature = formatTemperature(55.0)
+	state.zoneType = 'DHW'
+	
+	// Populate state.* with default values for each preference/input:
+	state.overrideUntil = getInputDefaultValue('prefOverrideUntil')
+	state.overrideDuration = getInputDefaultValue('prefOverrideDuration')
+	
+}
+
+
+/**
+ *  updated()
+ * 
+ *  Runs when device settings are changed.
+ **/
+def updated() {
+
+	if (state.debug) log.debug "${device.label}: Updating with settings: ${settings}"
+
+	// Copy input values to state:
+	state.overrideUntil = settings.prefOverrideUntil
+	state.overrideDuration = settings.prefOverrideDuration
+
+}
+
+
+/**********************************************************************
+ *  SmartApp-Child Interface Commands:
+ **********************************************************************/
+
+/**
+ *  generateEvent(values)
+ *
+ *  Called by parent to update the state of this child device.
+ *
+ **/
+void generateEvent(values) {
+
+	log.info "${device.label}: generateEvent(): New values: ${values}"
+	
+	if(values) {
+		values.each { name, value ->
+			if (   name == 'debug'
+                || name == 'updateRefreshTime'
+				|| name == 'dhwTemperature'
+				|| name == 'zoneType'
+				|| name == 'locationId'
+				|| name == 'gatewayId'
+				|| name == 'systemId'
+				|| name == 'zoneId'
+				) {
+				// Internal state only.
+				state."${name}" = value
+			}
+			else { // Attribute value, so generate an event:
+				if (name != null && value != null) {
+					sendEvent(name: name, value: value, displayed: true)
+				}
+				else { // If name or value is null, set displayed to false,
+					   // otherwise the 'Recently' view on smartphone app clogs 
+					   // up with empty events.
+					sendEvent(name: name, value: value, displayed: false)
+				}
+			}
+		}
+	}
+	
+	// Calculate derived attributes (order is important here):
+	calculateThermostatOperatingState()
+	calculateThermostatStatus()
+	calculateSwitchStatus()
+	
+}
+
+
+/**********************************************************************
+ *  Capability-related Commands:
+ **********************************************************************/
+
+
+/**
+ *  poll()
+ *
+ *  Polls the device. Required for the "Polling" capability
+ **/
+void poll() {
+
+	if (state.debug) log.debug "${device.label}: poll()"
+	parent.poll(state.zoneId)
+}
+
+
+/**
+ *  refresh()
+ *
+ *  Refreshes values from the device. Required for the "Refresh" capability.
+ **/
+void refresh() {
+
+	if (state.debug) log.debug "${device.label}: refresh()"
+	sendEvent(name: 'switchStatus', value: 'Updating', displayed: false)
+	parent.poll(state.zoneId)
+}
+
+
+/**
+ *  setThermostatMode(mode, until=-1)
+ * 
+ *  Set thermostat mode until specified time.
+ *
+ *   mode:    Possible values: 'auto','off','away','dayOff','custom', or 'economy'.
+ *
+ *   until:   (Optional) Time to apply mode until, can be either:
+ *             - Date: Date object representing when override should end.
+ *             - ISO-8601 date string, in format "yyyy-MM-dd'T'HH:mm:ssXX", e.g.: "2016-04-01T00:00:00Z".
+ *             - String: 'permanent'.
+ *             - Number: Duration in hours if mode is 'economy', or days if mode is 'away'/'dayOff'/'custom'.
+ *                       Duration will be rounded down to align with Midnight i nthe local timezone
+ *                       (e.g. a duration of 1 day will end at midnight tonight). If 0, mode is permanent.
+ *                       If duration is not specified, a default value is used from the Evohome SmartApp settings.
+ *
+ *   Notes:   'Auto' and 'Off' modes are always permanent.
+ *            Thermostat mode is a property of the temperatureControlSystem (i.e. Evohome controller).
+ *            Therefore changing the thermostatMode will affect all zones associated with the same controller.
+ * 
+ *  Example usage:
+ *   setThermostatMode('off', 0)         // Set off mode permanently.
+ *   setThermostatMode('away', 1)        // Set away mode for one day (i.e. until midnight tonight).
+ *   setThermostatMode('dayOff', 2)      // Set dayOff mode for two days (ends tomorrow night).
+ *   setThermostatMode('economy', 2)     // Set economy mode for two hours.
+ *
+ **/
+def setThermostatMode(String mode, until=-1) {
+
+	log.info "${device.label}: setThermostatMode(Mode: ${mode}, Until: ${until})"
+	
+	// Send update via parent:
+	if (!parent.setThermostatMode(state.systemId, mode, until)) {
+		sendEvent(name: 'switchStatus', value: 'Updating', displayed: false)
+		// Wait a few seconds as it takes a while for Evohome to update in response to a mode change.
+		pseudoSleep(state.updateRefreshTime * 1000)
+		parent.poll(0) // Force poll for all zones as thermostatMode is a property of the temperatureControlSystem.
+		return null
+	}
+	else {
+		log.error "${device.label}: setThermostatMode(): Error: Unable to set thermostat mode."
+		return 'error'
+	}
+}
+
+
+/**
+ *  setSwitchState(switchState, until=-1)
+ * 
+ *  Set switch state until specified time.
+ *
+ *   switchState: 'on' or 'off'
+ *
+ *   until:      (Optional) Time to apply switchState until, can be either:
+ *                - Date: date object representing when override should end.
+ *                - ISO-8601 date string, in format "yyyy-MM-dd'T'HH:mm:ssXX", e.g.: "2016-04-01T00:00:00Z".
+ *                - String: 'nextSwitchpoint', 'midnight', 'midday', or 'permanent'.
+ *                - Number: duration in minutes (from now). 0 = permanent.
+ *               If not specified, setpoint duration will default to the
+ *               behaviour defined in the device settings.
+ *
+ *  Example usage:
+ *   setSwitchState('on')                           // Turn on hot water until <device default>.
+ *   setSwitchState('on', 'nextSwitchpoint')        // Turn on hot water until next scheduled switchpoint.
+ *   setSwitchState('off', 'midnight')              // Turn off hot water until midnight.
+ *   setSwitchState('off', 'permanent')             // Turn off hot water permanently.
+ *   setSwitchState('on', 0)                        // Turn on hot water permanently.
+ *   setSwitchState('on', 6)                        // Turn on hot water for 6 hours.
+ *   setSwitchState('on', '2016-04-01T00:00:00Z')   // Turn on hot water until specific time.
+ *
+ **/
+def setSwitchState(switchState, until=-1) {
+
+	if (state.debug) log.debug "${device.label}: setSwitchState(switchState: ${switchState}, Until: ${until})"
+	
+	// Clean switchState:
+	switchState = switchState.toLowerCase()
+	
+	// Clean and parse until value:
+	def untilRes
+	Calendar c = new GregorianCalendar()
+	def tzOffset = location.timeZone.getOffset(new Date().getTime()) // Timezone offset to UTC in milliseconds.
+	
+	// If until has not been specified, determine behaviour from device state.overrideUntil:
+	if (-1 == until) {
+		switch (state.overrideUntil) {
+	    	case 'Next Switchpoint':
+	        	until = 'nextSwitchpoint'
+	            break
+	    	case 'Midday':
+	        	until = 'midday'
+	            break
+	    	case 'Midnight':
+	        	until = 'midnight'
+	            break
+	    	case 'Duration':
+	        	until = state.overrideDuration ?: 0
+	            break
+	    	case 'Permanent':
+	        	until = 'permanent'
+	            break
+	    	default:
+	        	until = 'nextSwitchpoint'
+	            break
+		}
+	}
+	
+	if ('permanent' == until || 0 == until) {
+		untilRes = 0
+	}
+	else if (until instanceof Date) {
+		untilRes = until
+	}
+	else if ('nextSwitchpoint' == until) {
+		untilRes = new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", device.currentValue('nextScheduledTime'))
+	}
+	else if ('midday' == until) {
+		untilRes = new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", new Date().format("yyyy-MM-dd'T'12:00:00XX", location.timeZone)) 
+	}
+	else if ('midnight' == until) {
+		c.add(Calendar.DATE, 1 ) // Add one day to calendar and use to get midnight in local time:
+		untilRes =  new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", c.getTime().format("yyyy-MM-dd'T'00:00:00XX", location.timeZone))
+	}
+	else if (until ==~ /\d+.*T.*/) { // until is a ISO-8601 date string, so parse:
+		untilRes = new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", until)
+	}
+	else if (until.isNumber()) { // until is a duration in minutes, so construct date from now():
+		// Evohome supposedly only accepts setpoints for up to 24 hours, so we should limit minutes to 1440.
+		// For now, just pass any duration and see if Evohome accepts it...
+		untilRes = new Date( now() + (Math.round(until) * 60000) )
+	}
+	else {
+		log.warn "${device.label}: setSwitchState(): until value could not be parsed. switchState will be applied permanently."
+		untilRes = 0
+	}
+	
+	log.info "${device.label}: setSwitchState(): Setting switchState to: ${switchState} until: ${untilRes}"
+	
+	// Send update via parent:
+	if (!parent.setDHWSwitchState(state.zoneId, switchState, untilRes)) {
+		// Command was successful, but it takes a few seconds for the Evohome cloud service to update with new values.
+		// Meanwhile, we know the new switchState and switchStateMode anyway:
+		sendEvent(name: 'switch', value: switchState)
+		sendEvent(name: 'switchStateMode', value: (0 == untilRes) ? 'permanentOverride' : 'temporaryOverride' )
+		sendEvent(name: 'switchStateUntil', value: (0 == untilRes) ? null : untilRes.format("yyyy-MM-dd'T'HH:mm:00XX", TimeZone.getTimeZone('UTC')))
+		calculateThermostatOperatingState()
+		calculateThermostatStatus()
+		sendEvent(name: 'switchStatus', value: 'Updating', displayed: false)
+		pseudoSleep(state.updateRefreshTime * 1000)
+		parent.poll(state.zoneId)
+		return null
+	}
+	else {
+		log.error "${device.label}: setSwitchState(): Error: Unable to set switch state."
+		return 'error'
+	}
+}
+
+
+
+/**
+ *  clearSwitchState()
+ * 
+ *  Clear any switchState override, returning switchState to scheduled value.
+ *  switchStateMode will return to "followSchedule".
+ *  switchStateUntil will become nextScheduledTime.
+ * 
+ **/
+def clearSwitchState() {
+
+	log.info "${device.label}: clearSwitchState()"
+
+	// Send update via parent:
+	if (!parent.clearDHWSwitchState(state.zoneId)) {
+		// Command was successful, but it takes a few seconds for the Evohome cloud service to update.
+		// Meanwhile, we know the new switchStateMode is "followSchedule".
+		//sendEvent(name: 'switch', value: device.currentValue('scheduledSwitchState'))
+		sendEvent(name: 'switchStateMode', value: 'followSchedule')
+		//sendEvent(name: 'switchStateUntil', value: device.currentValue('nextScheduledTime'))
+		sendEvent(name: 'switchStatus', value: 'Updating', displayed: false)
+		// sleep command is not allowed in SmartThings, so we use psuedoSleep().
+		pseudoSleep(state.updateRefreshTime * 1000)
+		parent.poll(state.zoneId)
+		return null
+	}
+	else {
+		log.error "${device.label}: clearSwitchState(): Error: Unable to clear switch state."
+		return 'error'
+	}
+}
+
+
+
+/**********************************************************************
+ *  Convenience Commands:
+ *   These commands alias other commands with preset parameters.
+ **********************************************************************/
+
+void resume() {
+	if (state.debug) log.debug "${device.label}: resume()"
+	clearSwitchState()
+}
+
+void auto() {
+	if (state.debug) log.debug "${device.label}: auto()"
+	setThermostatMode('auto')
+}
+
+void heat() {
+	if (state.debug) log.debug "${device.label}: heat()"
+	setThermostatMode('auto')
+}
+
+void away(until=-1) {
+	if (state.debug) log.debug "${device.label}: away()"
+	setThermostatMode('away', until)
+}
+
+void custom(until=-1) {
+	if (state.debug) log.debug "${device.label}: custom()"
+	setThermostatMode('custom', until)
+}
+
+void dayOff(until=-1) {
+	if (state.debug) log.debug "${device.label}: dayOff()"
+	setThermostatMode('dayOff', until)
+}
+
+void economy(until=-1) {
+	if (state.debug) log.debug "${device.label}: economy()"
+	setThermostatMode('economy', until)
+}
+
+void on(until=-1) {
+	if (state.debug) log.debug "${device.label}: on()"
+	setSwitchState('on',until=-1)
+}
+
+void off(until=-1) { // Sets a switchState override. Does not change thermostatMode to 'Off'.
+	if (state.debug) log.debug "${device.label}: off()"
+	setSwitchState('off',until=-1)
+}
+
+void boost() {
+	if (state.debug) log.debug "${device.label}: boost()"
+	setSwitchState('on')
+}
+
+void suppress() {
+	if (state.debug) log.debug "${device.label}: suppress()"
+	setSwitchState('off')
+}
+
+/**********************************************************************
+ *  Helper Commands:
+ **********************************************************************/
+
+/**
+ *  pseudoSleep(ms)
+ * 
+ *  Substitute for sleep() command.
+ *
+ **/
+private pseudoSleep(ms) {
+	def start = now()
+	while (now() < start + ms) {
+		// Do nothing, just wait.
+	}
+}
+
+
+/**
+ *  getInputDefaultValue(inputName)
+ * 
+ *  Get the default value for the specified input.
+ *
+ **/
+private getInputDefaultValue(inputName) {
+
+	if (state.debug) log.debug "${device.label}: getInputDefaultValue()"
+	
+	def returnValue
+	properties.preferences?.sections.each { section ->
+		section.input.each { input ->
+			if (input.name == inputName) {
+				returnValue = input.defaultValue
+			}
+		}
+	}
+	
+	return returnValue
+}
+
+
+
+/**
+ *  formatTemperature(t)
+ * 
+ *  Format temperature value to one decimal place.
+ *  t:   can be string, float, bigdecimal...
+ *  Returns as string.
+ **/
+private formatTemperature(t) {
+	try {
+		return Float.parseFloat("${t}").round(1).toString()
+    }
+    catch (NumberFormatException e) {
+    	log.warn "${app.label}: formatTemperature(): could not parse value: ${t}"
+        return '0.0'
+    }
+}
+
+
+/**
+ *  formatThermostatModeForDisp(mode)
+ * 
+ *  Translate SmartThings values to display values.
+ *   
+ **/
+private formatThermostatModeForDisp(mode) {
+
+	if (state.debug) log.debug "${device.label}: formatThermostatModeForDisp()"
+
+	switch (mode) {
+		case 'auto':
+			mode = 'Auto'
+			break
+		case 'economy':
+			mode = 'Economy'
+			break
+		case 'away':
+			mode = 'Away'
+			break
+		case 'custom':
+			mode = 'Custom'
+			break
+		case 'dayOff':
+			mode = 'Day Off'
+			break
+		case 'off':
+			mode = 'Off'
+			break
+		default:
+			mode = 'Unknown'
+			break
+	}
+
+	return mode
+ }
+  
+
+/**
+ *  calculateThermostatOperatingState()
+ * 
+ *  Calculates thermostatOperatingState and generates event accordingly.
+ *
+ **/
+private calculateThermostatOperatingState() {
+
+	if (state.debug) log.debug "${device.label}: calculateThermostatOperatingState()"
+
+	// Convert temp values to BigDecimals for comparison:
+	def temp = new BigDecimal(device.currentValue('temperature') ?: 0)
+	def targetTemp = new BigDecimal(state.dhwTemperature ?: 0)
+    
+	def tOS
+	if ('off' == device.currentValue('switch')) {
+		tOS = 'off'
+	}
+	else if (temp < targetTemp) {
+		tOS = 'heating'
+	}
+	else {
+		tOS = 'idle'
+	}
+	
+	sendEvent(name: 'thermostatOperatingState', value: tOS)
+}
+
+
+/**
+ *  calculateThermostatStatus()
+ * 
+ *  Calculates thermostatStatus and generates event accordingly.
+ *
+ *  thermostatStatus is a text summary of thermostatMode and thermostatOperatingState.
+ *
+ **/
+private calculateThermostatStatus() {
+
+	if (state.debug) log.debug "${device.label}: calculateThermostatStatus()"
+
+	def newThermostatStatus = ''
+	def thermostatModeDisp = formatThermostatModeForDisp(device.currentValue('thermostatMode'))
+	
+	if ('Off' == thermostatModeDisp) {
+		newThermostatStatus = 'Off'
+	}
+	else if('off' == device.currentValue('thermostatOperatingState')) {
+		newThermostatStatus = "Off (${thermostatModeDisp})"
+	}
+	else if('heating' == device.currentValue('thermostatOperatingState')) {
+		newThermostatStatus = "Heating to ${state.dhwTemperature}° (${thermostatModeDisp})"
+	}
+	else {
+		newThermostatStatus = "Idle (${thermostatModeDisp})"
+	}
+	
+	sendEvent(name: 'thermostatStatus', value: newThermostatStatus)
+}
+
+
+
+/**
+ *  calculateSwitchStatus()
+ * 
+ *  Calculates switchStatus and generates event accordingly.
+ *
+ *  switchStatus is a text summary of switchStateMode and switchStateUntil. 
+ *
+ **/
+private calculateSwitchStatus() {
+
+	if (state.debug) log.debug "${device.label}: calculateSwitchStatus()"
+
+	def newSwitchStatus = ''
+	def switchStateMode = device.currentValue('switchStateMode')
+	
+	if ('off' == device.currentValue('thermostatMode')) {
+		newSwitchStatus = 'Off'
+	}
+	else if ('away' == device.currentValue('thermostatMode')) {
+		newSwitchStatus = 'Away'
+	}
+	else if ('followSchedule' == switchStateMode) {
+		newSwitchStatus = 'Following Schedule'
+	}
+	else if ('permanentOverride' == switchStateMode) {
+		newSwitchStatus = 'Permanent'
+	}
+	else {
+		def untilStr = device.currentValue('switchStateUntil')
+		if (untilStr) {
+		
+			def untilDate = new Date().parse("yyyy-MM-dd'T'HH:mm:ssXX", untilStr) 
+			def untilDisp = ''
+			
+			if (untilDate.format("u") == new Date().format("u")) { // Compare day of week to current day of week (today).
+				untilDisp = untilDate.format("HH:mm", location.timeZone) // Same day, so just show time.
+			}
+			else {
+				untilDisp = untilDate.format("HH:mm 'on' EEEE", location.timeZone) // Different day, so include name of day.
+			}
+			newSwitchStatus = "Temporary Until ${untilDisp}"
+		}
+		else {
+			newSwitchStatus = "Temporary"
+		}
+	}
+	
+	sendEvent(name: 'switchStatus', value: newSwitchStatus)
+}
