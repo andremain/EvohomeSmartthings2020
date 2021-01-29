@@ -32,32 +32,22 @@
  *   for the specific language governing permissions and limitations under the License.
  *
  */ 
+ 
 metadata {
-	definition (name: "Evohome Hot Water Zone", namespace: "Andremain", author: "Andreas Christodoulou") {
-		capability "Actuator"
+	definition (name: "Evohome Hot Water Zone R1.8", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "8bb42b65-9b5d-346c-8a7f-c02fad9d2b58", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
-		capability "Refresh"
 		capability "Switch"
 		capability "Temperature Measurement"
-		capability "Thermostat"
+		capability 'Health Check'
+		capability "Refresh"
+		capability "Thermostat Mode"
+		capability "thermostatOperatingState"
 		
-		//command "poll" // Polling
-		command "refresh" // Refresh
-		command "setThermostatMode" // Thermostat
-		command "setSwitchState" // Custom
 		command "on" // Switch
 		command "off" // Switch
 		command "heat" // Thermostat
-		command "auto" // Custom
-		command "away" // Custom
-		command "economy" // Custom
-		command "dayOff" // Custom
-		command "custom" // Custom
-		command "resume" // Custom
-		command "boost" // Custom
-		command "suppress" // Custom
-		command "generateEvent" // Custom
-		command "test" // Custom
+		command "refresh" // Refresh
+		command "setThermostatMode" // Thermostat
 
 		attribute "temperature","number" // Temperature Measurement
 		attribute "thermostatMode", "string" // Thermostat
@@ -73,106 +63,6 @@ metadata {
 		attribute "nextScheduledSwitchState", "number" // Custom
 		attribute "nextScheduledTime", "string" // Custom
 		
-	}
-
-	tiles(scale: 2) {
-
-		// Main multi
-		multiAttributeTile(name:"multi", type:"generic", width:6, height:4, canChangeIcon: true) {
-			tileAttribute("device.switch", key: "PRIMARY_CONTROL") {
-				attributeState("off", label: 'Off', backgroundColor:"#269bd2") // icon: 'st.thermostat.heating-cooling-off'
-				attributeState("on", label: 'On', backgroundColor:"#ffa81e") // icon: 'st.thermostat.heating'
-			}
-			
-			tileAttribute("device.thermostatStatus", key: "SECONDARY_CONTROL") {
-				attributeState "default", label:'(${currentValue})'
-			}
-			
-		}
-	
-		// temperature tile:
-		valueTile("temperature", "device.temperature", width: 2, height: 2, canChangeIcon: true) {
-			state("temperature", label:'${currentValue}°', unit:"C", icon:"st.Weather.weather2",
-					backgroundColors:[
-							// Celsius
-							[value: 0, color: "#153591"],
-							[value: 10, color: "#1e9cbb"],
-							[value: 20, color: "#90d2a7"],
-							[value: 30, color: "#44b621"],
-							[value: 40, color: "#f1d801"],
-							[value: 50, color: "#d04e00"],
-							[value: 60, color: "#bc2323"]
-					]
-			)
-		}
-		
-		// switch state tiles:
-		valueTile("switchStatus", "device.switchStatus", width: 3, height: 1, decoration: "flat") {
-			state "switchStatus", label:'${currentValue}', backgroundColor:"#ffffff"
-		}
-		standardTile("resume", "device.resume", width: 1, height: 1, decoration: "flat") {
-			state "default", action:"resume", label:'Resume', icon:"st.samsung.da.oven_ic_send"
-		}
-		standardTile("boost", "device.boost", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "default", action:"boost", label:'Boost' // icon TBC
-		}
-		standardTile("suppress", "device.suppress", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
-			state "default", action:"suppress", label:'Suppress' // icon TBC
-		}
-		
-		
-		// thermostatMode/Status Tiles:
-		
-		// thermostatStatus (also incorporated into the multi tile).
-		valueTile("thermostatStatus", "device.thermostatStatus", height: 1, width: 6, decoration: "flat") {
-			state "thermostatStatus", label:'${currentValue}', backgroundColor:"#ffffff"
-		}
-		// Single thermostatMode tile that cycles between all modes (too slow).
-		// To Do: Update with Evohome-specific modes:
-		standardTile("thermostatMode", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
-			state "off", action:"cycleMode", nextState: "updating", icon: "st.thermostat.heating-cooling-off"
-			state "heat", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.heat"
-			state "cool", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.cool"
-			state "auto", action:"cycleMode",  nextState: "updating", icon: "st.thermostat.auto"
-			state "auxHeatOnly", action:"cycleMode", icon: "st.thermostat.emergency-heat"
-			state "updating", label:"Working", icon: "st.secondary.secondary"
-		}
-		// Individual Mode tiles:
-		standardTile("auto", "device.auto", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"auto", icon: "st.thermostat.auto"
-		}
-		standardTile("away", "device.away", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"away", label:'Away' // icon TBC
-		}
-		standardTile("custom", "device.custom", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"custom", label:'Custom' // icon TBC
-		}
-		standardTile("dayOff", "device.dayOff", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"dayOff", label:'Day Off' // icon TBC
-		}
-		standardTile("economy", "device.economy", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"economy", label:'Economy' // icon TBC
-		}
-		standardTile("off", "device.off", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
-			state "default", action:"off", icon:"st.thermostat.heating-cooling-off"
-		}
-		// Other tiles:
-		standardTile("refresh", "device.thermostatMode", inactiveLabel: false, decoration: "flat") {
-			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
-		}
-		standardTile("test", "device.test", width: 1, height: 1, decoration: "flat") {
-			state "default", label:'Test', action:"test"
-		}
-		
-		main "multi"
-		details(
-				[
-				"multi",
-				"temperature","boost","switchStatus",
-				"suppress","resume","refresh", "test",
-				"auto","away","custom","dayOff","economy","off"
-				]
-		)
 	}
 
 	preferences {
@@ -221,6 +111,8 @@ def test() {
  **/
 def installed() {
 
+	initialize()
+
 	log.debug "${app.label}: Installed with settings: ${settings}"
 
 	state.installedAt = now()
@@ -253,6 +145,11 @@ def updated() {
 
 }
 
+def initialize() {
+	sendEvent(name:"temperature", value:"5", unit:"C")
+	sendEvent(name:"thermostatMode", value:"auto")
+    sendEvent(name:"supportedThermostatModes", value:["auto","off","eco","away","dayoff","custom"])
+}
 
 /**********************************************************************
  *  SmartApp-Child Interface Commands:
