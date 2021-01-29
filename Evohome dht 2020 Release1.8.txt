@@ -60,7 +60,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating R1.3", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Zone R1.8", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
