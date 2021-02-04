@@ -60,7 +60,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating Zone R1.8", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "3c7f0c66-08c2-37e5-b3f0-6c5199eb2701", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Zone R2.5", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "7a275a82-0ce9-317b-9dc1-091ec8badafa", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
@@ -230,7 +230,7 @@ void generateEvent(values) {
 				if (name != null && value != null) {
                 	if(name=='temperature'){
                     	//add unit for Temperature because it is needed in Dashboard View
-                    	sendEvent(name: name, value: value, displayed: true)
+                    	sendEvent(name: name, value: value, unit:"C", displayed: true)
                     }else{
 						sendEvent(name: name, value: value, displayed: true)
                     }
