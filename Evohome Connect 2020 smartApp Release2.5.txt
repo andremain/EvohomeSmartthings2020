@@ -448,7 +448,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating Zone R1.8", dni, null, values) //Change the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating Zone R2.5", dni, null, values) //Change the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -484,7 +484,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "Hot Water (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating Hot Water Zone: DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Hot Water Zone R1.8", dni, null, values)
+		                   	d = addChildDevice(app.namespace, "Evohome Hot Water Zone R2.5", dni, null, values)
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
