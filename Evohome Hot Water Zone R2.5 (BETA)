@@ -34,11 +34,10 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R1.8", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "8bb42b65-9b5d-346c-8a7f-c02fad9d2b58", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R2.5", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
-		capability 'Health Check'
 		capability "Refresh"
 		capability "Thermostat Mode"
 		capability "thermostatOperatingState"
@@ -181,7 +180,7 @@ void generateEvent(values) {
 			}
 			else { // Attribute value, so generate an event:
 				if (name != null && value != null) {
-					sendEvent(name: name, value: value, displayed: true)
+					sendEvent(name: name, value: value, unit:"C", displayed: true)
 				}
 				else { // If name or value is null, set displayed to false,
 					   // otherwise the 'Recently' view on smartphone app clogs 
