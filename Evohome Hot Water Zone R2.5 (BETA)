@@ -34,7 +34,7 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R2.5", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R2.7", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
@@ -464,11 +464,13 @@ void economy(until=-1) {
 
 void on(until=-1) {
 	if (state.debug) log.debug "${device.label}: on()"
+		sendEvent(name:"switch", value:"on") //Temporarily set state before getting from poll to avoid toggling on off on its own
 	setSwitchState('on',until=-1)
 }
 
 void off(until=-1) { // Sets a switchState override. Does not change thermostatMode to 'Off'.
 	if (state.debug) log.debug "${device.label}: off()"
+		sendEvent(name:"switch", value:"off") //Temporarily set state before getting from poll to avoid toggling on off on its own
 	setSwitchState('off',until=-1)
 }
 
