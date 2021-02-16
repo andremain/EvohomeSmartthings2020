@@ -60,7 +60,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating Zone R2.7", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "7a275a82-0ce9-317b-9dc1-091ec8badafa", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Zone R3.1", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "82c81c94-d0eb-3d9a-a2e9-af22db44cafc", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
@@ -69,8 +69,7 @@ metadata {
 		//New Smartthings Capabilities
 		capability "Thermostat Heating Setpoint"
         capability "Thermostat Setpoint"
-		capability "Thermostat Mode"
-        
+        capability "worldhouse47531.customthermostatmode"
 		
 		command "refresh" // Refresh
 		command "setHeatingSetpoint" // Thermostat
@@ -192,7 +191,6 @@ def initialize() {
 	sendEvent(name:"heatingSetpoint", value:"5", unit:"C")
 	sendEvent(name:"setHeatingSetpoint", value:"5", unit:"C")
 	sendEvent(name:"thermostatMode", value:"auto")
-    sendEvent(name:"supportedThermostatModes", value:["auto","off","eco","away","dayoff","custom"])
 }
 /**********************************************************************
  *  SmartApp-Child Interface Commands:
