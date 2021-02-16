@@ -448,7 +448,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "${zone.name} Heating Zone (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating device: Name: ${values.label},  DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Heating Zone R2.5", dni, null, values) //Change the name here to change the name of the device
+		                   	d = addChildDevice(app.namespace, "Evohome Heating Zone R2.7", dni, null, values) //Change the name here to change the name of the device
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -484,7 +484,7 @@ void updateChildDeviceConfig() {
 						try {
 							values.put('label', "Hot Water (Evohome)")
 							log.info "${app.label}: updateChildDeviceConfig(): Creating Hot Water Zone: DNI: ${dni}"
-		                   	d = addChildDevice(app.namespace, "Evohome Hot Water Zone R2.5", dni, null, values)
+		                   	d = addChildDevice(app.namespace, "Evohome Hot Water Zone R2.7", dni, null, values)
 						} catch (e) {
 							log.error "${app.label}: updateChildDeviceConfig(): Error creating device: Name: ${values.label}, DNI: ${dni}, Error: ${e}"
 						}
@@ -1003,15 +1003,17 @@ private getEvohomeSchedules() {
 					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, zone.zoneId )
 					def schedule = getEvohomeTempZoneSchedule(zone.zoneId)
 					if (schedule) {
-						evohomeSchedules << ['zoneId': zone.zoneId, 'dni': dni, 'schedule': schedule]
+						evohomeSchedules << ['zoneId': zone.zoneIsd, 'dni': dni, 'schedule': schedule]
 					}
 				}
 				// Hot Water Zone:
-				if (tcs.dhw.dhwId) {
-					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, tcs.dhw.dhwId )
-					def schedule = getEvohomeDHWSchedule(tcs.dhw.dhwId)
-					if (schedule) {
-						evohomeSchedules << ['zoneId': tcs.dhw.dhwId, 'dni': dni, 'schedule': schedule]
+				if (tcs.dhw) {
+					if (tcs.dhw.dhwId) {
+						def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, tcs.dhw.dhwId )
+						def schedule = getEvohomeDHWSchedule(tcs.dhw.dhwId)
+						if (schedule) {
+							evohomeSchedules << ['zoneId': tcs.dhw.dhwId, 'dni': dni, 'schedule': schedule]
+						}
 					}
 				}
 			}
