@@ -1003,7 +1003,7 @@ private getEvohomeSchedules() {
 					def dni = generateDni(loc.locationInfo.locationId, gateway.gatewayInfo.gatewayId, tcs.systemId, zone.zoneId )
 					def schedule = getEvohomeTempZoneSchedule(zone.zoneId)
 					if (schedule) {
-						evohomeSchedules << ['zoneId': zone.zoneIsd, 'dni': dni, 'schedule': schedule]
+						evohomeSchedules << ['zoneId': zone.zoneId, 'dni': dni, 'schedule': schedule]
 					}
 				}
 				// Hot Water Zone:
