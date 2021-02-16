@@ -34,7 +34,7 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R2.7", namespace: "Andremain", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R3.1", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
