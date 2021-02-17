@@ -15,6 +15,14 @@
  *
  *  Version History:
  * 
+ *
+ *
+ * 	 2021-02-17
+ *   Generated a new device presentation in order to remove the depricated refresh capability from appearing in the automations
+ *
+ *   2021-01-12
+ *   Updated the device handler presentation to work with the new app.
+ *
  *   2016-04-18: v0.01
  *    - Initial Release
  * 
@@ -34,12 +42,12 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R3.1", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "e0918aa1-80f9-33d4-a419-9de40da2ee72", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R3.2", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "06a9c01b-7b64-35fe-9ce1-e1b8931e590e", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
 		capability "Refresh"
-		capability "Thermostat Mode"
+		capability "worldhouse47531.customthermostatmode"
 		capability "thermostatOperatingState"
 		
 		command "on" // Switch
@@ -147,7 +155,6 @@ def updated() {
 def initialize() {
 	sendEvent(name:"temperature", value:"5", unit:"C")
 	sendEvent(name:"thermostatMode", value:"auto")
-    sendEvent(name:"supportedThermostatModes", value:["auto","off","eco","away","dayoff","custom"])
 }
 
 /**********************************************************************
