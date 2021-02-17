@@ -15,10 +15,16 @@
  *
  *  Version History:
  *
+ *	 2021-02-17: v3.2
+ *	 Added a custom thermostat capability, as using the stock one made alexa not able to set the temperature.
+ *   
+ *   2021-02-16: v3.1
+ *   Generated a new device presentation in order to remove the depricated refresh capability from appearing in the automations
+ *
  *   2021-01-19: v2.2
  *   Changed the default values for Settings: Boost and Suppress to integers, as using decimals cannot change the setpoint duration.
  * 
-  *   2016-04-18: v0.11
+ *   2016-04-18: v0.11
  *    - formatTemperature() - Improved error handling.
  *    - calculateThermostatOperatingState() - Convert temp values to BigDecimals for comparison.
  *    - calculateOptimisations() - Better handling when device attributes have not been initialised.
@@ -60,7 +66,7 @@
  *
  */ 
 metadata {
-	definition (name: "Evohome Heating Zone R3.1", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "82c81c94-d0eb-3d9a-a2e9-af22db44cafc", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Heating Zone R3.2", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Thermostat",ocfDeviceType:"oic.d.thermostat", vid: "62d86735-4d4c-3b29-b8c5-3ec60c147307", mnmn:"SmartThingsCommunity") {
 		capability "Refresh"
 		capability "Temperature Measurement"
 		capability 'Health Check'
