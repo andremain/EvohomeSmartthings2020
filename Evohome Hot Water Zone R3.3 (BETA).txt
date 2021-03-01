@@ -42,7 +42,7 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R3.2", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "06a9c01b-7b64-35fe-9ce1-e1b8931e590e", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R3.3", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "06a9c01b-7b64-35fe-9ce1-e1b8931e590e", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
@@ -377,6 +377,7 @@ def setSwitchState(switchState, until=-1) {
 	// Send update via parent:
 	if (!parent.setDHWSwitchState(state.zoneId, switchState, untilRes)) {
 		// Command was successful, but it takes a few seconds for the Evohome cloud service to update with new values.
+		log.info "Switch Command successful, sending state update to the API"
 		// Meanwhile, we know the new switchState and switchStateMode anyway:
 		sendEvent(name: 'switch', value: switchState)
 		sendEvent(name: 'switchStateMode', value: (0 == untilRes) ? 'permanentOverride' : 'temporaryOverride' )
