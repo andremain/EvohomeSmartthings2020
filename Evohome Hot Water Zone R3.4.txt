@@ -14,8 +14,10 @@
  *   - For latest documentation see: https://github.com/codersaur/SmartThings
  *
  *  Version History:
- * 
  *
+ *
+ *   2021-03-02
+ *   Commented out the parent.poll(state.zoneId) in line 389 so that setitng the switch state does not change back and forth in smartthings.
  *
  * 	 2021-02-17
  *   Generated a new device presentation in order to remove the depricated refresh capability from appearing in the automations
@@ -42,7 +44,7 @@
  */ 
  
 metadata {
-	definition (name: "Evohome Hot Water Zone R3.3", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "06a9c01b-7b64-35fe-9ce1-e1b8931e590e", mnmn:"SmartThingsCommunity") {
+	definition (name: "Evohome Hot Water Zone R3.4", namespace: "worldhouse47531", author: "Andreas Christodoulou", deviceTypeId:"Switch",ocfDeviceType:"oic.d.switch", vid: "06a9c01b-7b64-35fe-9ce1-e1b8931e590e", mnmn:"SmartThingsCommunity") {
 		capability "Sensor"
 		capability "Switch"
 		capability "Temperature Measurement"
@@ -386,7 +388,7 @@ def setSwitchState(switchState, until=-1) {
 		calculateThermostatStatus()
 		sendEvent(name: 'switchStatus', value: 'Updating', displayed: false)
 		pseudoSleep(state.updateRefreshTime * 1000)
-		parent.poll(state.zoneId)
+		//parent.poll(state.zoneId)
 		return null
 	}
 	else {
